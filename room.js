@@ -1,23 +1,85 @@
-
+var STD_ROOM_SIZE = 18; /* size of exterior rooms (interior may be of any size) */
 
 /* ======================================================================== */
 /* Room containing objects and terrain data.
 
-    Room objects are passed as 1st argument in ActiveObject's constructor.
+    Room objects are passed as 1st argument in StaticObject's constructor.
  */
-var Room = function () {
-    this.objects = [];
+var Room = function (width, height) {
+    this.objects = [];            /* list of objects (StaticObject descendants) for layer1 */
+    this.width =  width || STD_ROOM_SIZE;   /* size in tiles */
+    this.height = height || STD_ROOM_SIZE;
+    this.quest = null;            /* a Quest instance, if any */
+    this.entry_point = null;      /* an {x,y} object; used when teleporting into this room 
+                                   * as initial position for player */    
 };
 
-/* call this to display this room on screen */
-Room.prototype.enter = function () {
+/* call this to display this room on screen 
+ * @param int scroll_dx: +1, 0 or -1 depending on where the player came from *
+ *                       +1 means 'player went right' (we need to scroll left)
+ * @param int scroll_dy: +1 means 'player went down' (scrolling up)
+ */
+Room.prototype.enter = function (enterCallback, scroll_dx, scroll_dy) {
+    this.old_layer0 = Game.layer0;
+    this.old_layer1 = Game.layer1;
+    this.old_layer2 = Game.layer2;
+    this.enterCallback = enterCallback;
+    
+    Game.createLayerRoots();
+    
+    this.prepareSprites();
+    if (scroll_dx !== undefined) {
+        /* transit animation */
+        Game.player.controls_enabled = false;
+        var room = this;
+        Game.positionLayers(room.old_layer0.left + STD_ROOM_SIZE*32*scroll_dx, room.old_layer0.top + STD_ROOM_SIZE*32*scroll_dy);
+        
+        room.remainingAnimationSteps = VIEWPORT_SIDE;
+        var delta = (VIEWPORT_SIDE * 32) / room.remainingAnimationSteps;
+        var shiftLayers = function () {
+            if (room.remainingAnimationSteps > 0) {
+                room.old_layer0.setPositionDelta(-scroll_dx * delta, -scroll_dy * delta);
+                room.old_layer1.setPositionDelta(-scroll_dx * delta, -scroll_dy * delta);
+                room.old_layer2.setPositionDelta(-scroll_dx * delta, -scroll_dy * delta);
+                Game.positionLayers(Game.layer0.left - scroll_dx * delta, Game.layer0.top - scroll_dy * delta); 
+                room.remainingAnimationSteps--;
+            } else {
+                room.enterFinish();
+            }
+        };
+        this.old_layer1.onDrawCallback = shiftLayers;
+    } else {
+        /* finalize operation directly */
+        this.enterFinish();
+    }
+};
+
+/* After transit animation is completed... */
+Room.prototype.enterFinish = function () {
     if (Game.currentroom) 
         Game.currentroom.leave();
+        
+    if (Game.player) {
+        this.old_layer1.removeChild(Game.player.sprite);
+        Game.layer1.addChild(Game.player.sprite);
+        Game.player.controls_enabled = true;
+    }
+    this.old_layer0.remove();     
+    this.old_layer1.remove();     
+    this.old_layer2.remove();     
+    
     Game.currentroom = this;
+    
+    
+    if (this.enterCallback)
+        this.enterCallback();
+}
+
+Room.prototype.prepareSprites = function () {
+    Game.grid = new jstile.Grid(this.width, this.height, 32, 32, jstile.ORTHOGONAL);
     for (var i in this.objects) { 
         this.objects[i].enterRoom();
     }
-    /* TODO update terrain */
 };
 
 /* call this to clear the screen before entering next room  */
@@ -25,7 +87,6 @@ Room.prototype.leave = function () {
     for (var i in this.objects) { 
         this.objects[i].leaveRoom();
     }
-    /* TODO clear terrain tiles */
     Game.currentroom = null;
 };
 
@@ -40,7 +101,7 @@ Room.prototype.removeObj = function (obj) {
     this.objects.splice(i, 1);
 };
 
-/* returns first object that is in this room, is located at (x,y) grid coords,
+/* returns first object which is located at (x,y) grid coords
    and is an obstacle.
 */
 Room.prototype.get_obstacles = function (x,y) {
@@ -51,73 +112,38 @@ Room.prototype.get_obstacles = function (x,y) {
     return null;
 };
 
-/*============================================================================== */
-/* ZoneRoom: room that is loaded from zone data extracted fro yodesk.dta
-*/
-
-var ZoneRoom = function (room_id) {
-    ZoneRoom.superclass.constructor.apply(this, []);
-    this.room_id = room_id;
-    this.loadObjects();
+/* ======================================================================== */
+var SimpleRoom = function (width, height) {
+    SimpleRoom.superclass.constructor.apply(this, [width, height]);
 };
-ZoneRoom.inheritFrom(Room);
+SimpleRoom.inheritFrom(Room);
 
-ZoneRoom.prototype.loadObjects = function () {
-    /* load layer1 objects from zonedata */
-    var zone = ZONES[this.room_id];
-    for(var y = 0; y < zone.height; ++y) {
-        for(var x = 0; x < zone.width; ++x) {
-            var tile = zone.tiles[(y * zone.width + x) * 3 + 1];
-            if (tile == 0 || tile == 65535) continue;
+SimpleRoom.prototype.prepareSprites = function () {
+    SimpleRoom.superclass.prepareSprites.apply(this);
+    
+    this.layer0tiles = [];
+    this.layer2tiles = [];
+    for(var y = 0; y < this.height; ++y) {
+        for(var x = 0; x < this.width; ++x) {
+            var cell;
+            var offset = Game.grid.offsets[x][y];
+            cell = jstile.Sprite.tileFactory(
+                Math.floor(Math.random() * 6),
+                offset.left,
+                offset.top,
+                x+y
+            );
+            this.layer0tiles.push(cell);
             
-            var obj;
-            if (AUTO_MONSTERS[tile]) {
-                var ctor = WanderingMonster;
-                if (AUTO_MONSTERS[tile].shooting)
-                    ctor = ShootingMonster;
-                obj = new ctor(this, MONSTER_SETS[AUTO_MONSTERS[tile].name], x,y, 10, 1, 1,
-                    AUTO_MONSTERS[tile].loot, AUTO_MONSTERS[tile].loot_chance
-                );
-            }
-            else {
-                obj = new StaticObject(this, tile, x, y);
-            }
         }
     }
-};
+    Game.layer0.addChild(this.layer0tiles);
+    Game.layer2.addChild(this.layer2tiles);
+    
+}; 
 
-ZoneRoom.prototype.enter = function () {
-    
-    /* load terrain from zonedata */
-    var zone = ZONES[this.room_id];
-    Game.grid = new jstile.Grid(zone.width, zone.height, 32, 32, jstile.ORTHOGONAL);
-    Game.gridcells = [];
-    var layer0tiles = [];
-    var layer2tiles = [];
-	for(var y = 0; y < zone.height; ++y) {
-		for(var x = 0; x < zone.width; ++x) {
-			var offset = Game.grid.offsets[x][y];
-			var cell;
-            cell = jstile.Sprite.tileFactory(
-				zone.tiles[(y * zone.width + x) * 3],
-				offset.left,
-				offset.top,
-				x+y
-			);
-			layer0tiles.push(cell);
-            /*gridrow.push(cell);*/
-            cell = jstile.Sprite.tileFactory(
-				zone.tiles[(y * zone.width + x) * 3 + 2],
-				offset.left,
-				offset.top,
-				x+y
-			);
-			layer2tiles.push(cell);
-		}
-        /*Game.gridcells.push(gridrow);*/
-	}
-	Game.layer0.addChild(layer0tiles);
-	Game.layer2.addChild(layer2tiles);
-    
-    ZoneRoom.superclass.enter.apply(this);
+SimpleRoom.prototype.leave = function () {
+    Game.layer0.removeChild(this.layer0tiles);
+    Game.layer2.removeChildren(this.layer0tiles);
+    SimpleRoom.superclass.leave.apply(this);
 };

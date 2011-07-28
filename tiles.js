@@ -7,7 +7,7 @@ var TILESETS = {
 var ensure_tileset_loaded = function (index) {
     var img = TILESETS[index];
     if (!img) {
-        var filename = 'tiles/sprites00' + index.toString() + '.png';
+        var filename = 'yotiles/sprites00' + index.toString() + '.png';
         TILESETS[index] = new jstile.Image(filename, 32, 32, jstile.VERTICAL, TILES_PER_ROW-1, 0);
     }
 };
@@ -26,6 +26,41 @@ jstile.Sprite.tileFactory = function(tile_index, left, top, zindex, onDrawCallba
     }
     var sprite = new this(TILESETS[tileset], left, top, zindex, 0, onDrawCallback, once, onDone);
     sprite.setTile(tile_index);
+    return sprite;
+};
+
+/* Create a new animated sprite 
+    @param array tile_sequence: list of tile indices
+*/
+jstile.Sprite.animationFactory = function(tile_sequence, left, top, zindex, once, onDone)
+{
+    var tile_index = tile_sequence[0];
+    var tileset = Math.floor(tile_index / TILES_PER_TILESET) % TILESET_COUNT;
+    ensure_tileset_loaded(tileset);
+    
+    var frame_delay = 1;
+    var on_frame = function () {
+        if (!this.delay) { this.delay = 0; this.frame_no = -1; }
+        if (--this.delay <= 0) {
+            this.delay = frame_delay;
+            this.frame_no++; 
+            if (this.frame_no >= tile_sequence.length && once) {
+                if (onDone) onDone();
+                this.delay = null; /* sprite might be reused */
+                this.remove();
+            } else {
+                this.frame_no = this.frame_no % tile_sequence.length;
+                this.setTile(tile_sequence[this.frame_no]);
+            }
+        }
+    };
+    
+    if(jstile.Sprite._recyclebin.length) {
+        var sprite = jstile.Sprite._recyclebin.shift();
+        jstile.Sprite.call(sprite, TILESETS[tileset], left, top, zindex, 0, on_frame, once, onDone);
+        return sprite;
+    }
+    var sprite = new this(TILESETS[tileset], left, top, zindex, 0, on_frame, once, onDone);
     return sprite;
 };
 
@@ -187,8 +222,8 @@ var MAIN_ITEMS = {
     134: {name: "Groucho", tile_index: 1062},
     135: {name: "Abyssin", tile_index: 1063},
     136: {name: "Nien Nunb", tile_index: 1064},
-    137: {name: "Brainee(left)", tile_index: 1065},
-    138: {name: "Brainee2", tile_index: 1066},
+    137: {name: "Brainee", tile_index: 1065},
+    138: {name: "Brainee", tile_index: 1066},
     139: {name: "Chico", tile_index: 1067},
     140: {name: "Harpo", tile_index: 1069},
     141: {name: "Labria", tile_index: 1071},
@@ -196,14 +231,14 @@ var MAIN_ITEMS = {
     143: {name: "Ice Mushroom", tile_index: 1196},
     144: {name: "Mushroom", tile_index: 1197},
     145: {name: "Scrubroot", tile_index: 1198},
-    146: {name: "Captain Bahl (I)", tile_index: 1211},
+    146: {name: "Captain Bahl", tile_index: 1211},
     147: {name: "General Marutz", tile_index: 1212},
-    148: {name: "Fibbs (I)", tile_index: 1213},
-    149: {name: "Doctor Nambu (I)", tile_index: 1214},
+    148: {name: "Fibbs", tile_index: 1213},
+    149: {name: "Doctor Nambu", tile_index: 1214},
     150: {name: "DataCube", tile_index: 1215},
     151: {name: "Star Sapphire", tile_index: 1216},
     152: {name: "Dianoga Heart", tile_index: 1217},
-    153: {name: "R2L7 (I)", tile_index: 1218},
+    153: {name: "R2L7", tile_index: 1218},
     154: {name: "Key Card", tile_index: 1231},
     155: {name: "Key Card", tile_index: 1232},
     156: {name: "Key Card", tile_index: 1233},
@@ -220,7 +255,7 @@ var MAIN_ITEMS = {
     167: {name: "Key Card", tile_index: 1244},
     168: {name: "Rebel ID Card", tile_index: 1245},
     169: {name: "Ladder", tile_index: 1246},
-    170: {name: "Beacon (L)", tile_index: 1268},
+    170: {name: "Beacon", tile_index: 1268},
     171: {name: "Ice Merchant", tile_index: 1279},
     172: {name: "IP-8 Droid", tile_index: 1280},
     173: {name: "Bartender Droid", tile_index: 1281},
@@ -242,7 +277,7 @@ var MAIN_ITEMS = {
     189: {name: "END3A", tile_index: 1596},
     190: {name: "END3B", tile_index: 1597},
     191: {name: "Uncle Jimmy", tile_index: 1600},
-    192: {name: "Sgt. Bilko(E)", tile_index: 1601},
+    192: {name: "Sgt. Bilko", tile_index: 1601},
     193: {name: "Asinus Testa", tile_index: 1602},
     194: {name: "Private Lime", tile_index: 1603},
     195: {name: "Back", tile_index: 1604},
@@ -255,8 +290,8 @@ var MAIN_ITEMS = {
     202: {name: "END16B", tile_index: 1653},
     203: {name: "Jungle Ray", tile_index: 1742},
     204: {name: "Tool Droid", tile_index: 1768},
-    205: {name: "IG88(E)", tile_index: 1769},
-    206: {name: "ForestTrooper(E)", tile_index: 1770},
+    205: {name: "IG88", tile_index: 1769},
+    206: {name: "ForestTrooper", tile_index: 1770},
     207: {name: "Droid1", tile_index: 1785},
     208: {name: "Droid2", tile_index: 1786},
     209: {name: "Ending5A", tile_index: 1788},
@@ -297,6 +332,44 @@ var MAIN_ITEMS = {
     244: {name: "Ewok Doc", tile_index: 2037},
     245: {name: "Chewbacca", tile_index: 2114}
 };
+
+/* Indices below point into array MAIN_ITEMS */
+var BASE_TRADE = [84,92]; /* medpack and blaster rifle */
+
+var LOOT = [1,2,5,7,22,62,86,92,93,143,144,145,];
+var GENERIC_KEYCARDS = [154,155,156,157,158,160,161,164,165,166,167,211,213,];
+
+/* Returns a random item_index from LOOT array.
+ * If chance (real number 0.0 .. 1.0) is specified, it indicates the probability
+ * of returning non-null index; otherwise chance=1.0 is assumed.
+*/
+var random_loot = function (chance) {
+    if (chance === undefined) chance = 1.0;
+    var i = Math.floor(Math.random() * LOOT.length);
+    if (Math.random() <= chance)
+        return LOOT[i];
+    return null;
+};
+            
+var QUEST_ITEMS = [0,8,10,11,12,13,14,15,16,17,18,
+                   19,20,21,23,24,25,26,27,28,29,30,
+                   31,32,33,34,35,36,37,38,39,40,41,
+                   42,43,44,46,47,48,49,50,51,52,53,
+                   54,55,56,57,58,59,60,61,63,64,65,
+                   66,67,68,69,70,71,72,73,74,75,76,
+                   77,78,79,80,81,83,87,88,94,95,96,
+                   97,98,99,100,102,104,105,106,
+                   150,151,152,159,162,163,168,169,
+                   170,174,175,176,179,188,214,231,
+                   232,235,
+                   ];
+var QUEST_PERSONS = [107,108,110,113,119,123,126,
+                    127,129,130,131,132,133,134,135,
+                    136,138,139,140,141,142,146,147,
+                    148,149,171,172,173,180,191,192,
+                    193,194,196,212,215,217,218,219,
+                    220,221,222,223,224,227,228,229,
+                    230,236,237,244];
 
 var THINGS = {
     "Lightsaber": 0,
@@ -610,6 +683,8 @@ var PEOPLE = {
     "Chewbacca": 245
 };
 
+/* Indices below specify tile indices */
+
 /* this index in any tileset must contain a blank transparent tile */
 var EMPTY_TILE = 355;
 
@@ -664,4 +739,50 @@ var PROJECTILES = {
 
 var PROJECTILE_EXPLOSIONS = {
     "red": null
+};
+
+var CONTAINER_SETS = {
+    "sandchest": {closed: 16, open: 17},
+    "woodchest": {closed: 258, open: 259},
+    "beelinechest": {closed: 633, open: 634},
+    "graychest": {closed: 635, open: 634},
+    "redchest": {closed: 636, open: 637},
+    "icechest": {closed: 1165, open: 1166},
+    "minibar":  {closed: 1765, open: 1766}, 
+    "fallenrebel": {closed: 1101, open: 1101},
+    "car_left": {closed: 1175, open: 1250},  /* car facing left,  nose: 1174 */
+    "car_right": {closed: 1922, open: 1934}, /* car facing right, nose: 1923 */ 
+};
+
+var CAR_NOSES = {
+    "left": 1174,
+    "right": 1923,
+};
+
+var ANIMATIONS = {
+    "explosion": [1073,1074,1075],
+    "iamhere":   [837,837,837,EMPTY_TILE,EMPTY_TILE,EMPTY_TILE]
+};
+
+var LOCATOR_TILES = {
+    "puzzle": 817,
+    "solvedpuzzle": 818,
+    "gateway": 819,
+    "solvedgateway": 820,
+    
+    "border_up": 821,
+    "solvedborder_up": 822,
+    "border_right": 823,
+    "solvedborder_right": 824,
+    "border_down": 825,
+    "solvedborder_down": 826,
+    "border_left": 827,
+    "solvedborder_left": 828,
+    
+    "home": 829,
+    "wilderness": 832,
+    "teleport": 833,
+    "unvisited": 835,
+    "nothing": 836,
+    "here": 837
 };

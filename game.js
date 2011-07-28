@@ -3,6 +3,7 @@ var Game = {
     gridcells: null,
     currentroom: null,
     player: null,
+    world: null,
     
     /* layerN : Sprite; layerN_layer: Layer containing a single toplevel sprite layerN */
     layer0: null,
@@ -12,6 +13,16 @@ var Game = {
     layer2: null,
     layer2_layer: null,
     overlayer: null
+};
+
+
+Game.createLayerRoots = function () {
+    Game.layer0 = jstile.Sprite.tileFactory(EMPTY_TILE, 0, 0, 1);
+    Game.layer1 = jstile.Sprite.tileFactory(EMPTY_TILE, 0, 0, 1);
+    Game.layer2 = jstile.Sprite.tileFactory(EMPTY_TILE, 0, 0, 1);
+    Game.layer0_layer.addSprite(Game.layer0);
+    Game.layer1_layer.addSprite(Game.layer1);
+    Game.layer2_layer.addSprite(Game.layer2);
 };
 
 Game.startOverlayer = function () {
@@ -25,6 +36,9 @@ Game.stopOverlayer = function () {
     Game.layer0_layer.start();
     Game.layer1_layer.start();
     Game.layer2_layer.start();
+    Game.layer0_layer._refresh(true, true); 
+    Game.layer1_layer._refresh(true, true); 
+    Game.layer2_layer._refresh(true, true); 
 };
 
 /* Set position of layers 0,1,2 at specific coords (in pixels, usually negative).
@@ -39,9 +53,9 @@ Game.positionLayers = function (off_x, off_y) {
     /* repaint layers immediately, do not wait for timer;
        but do not call onDrawCallback this time
     */
-    Game.layer0_layer._refresh(true); 
-    Game.layer1_layer._refresh(true); 
-    Game.layer2_layer._refresh(true); 
+    Game.layer0_layer._refresh(true, true); 
+    Game.layer1_layer._refresh(true, true); 
+    Game.layer2_layer._refresh(true, true); 
 };
 
 var DIRECTIONS = {  
@@ -58,84 +72,48 @@ var SIDESTEPS = {
     right: {dx: 0, dy: 1}
 };
 
-/* Shuffles array in-place. */
-/*
-var shuffle = function (arr) {
-    for (var i = arr.length-1; i > 0; i--) {
-        var j = Math.floor(Math.random() * i);
-        var tmp = arr[i];
-        arr[i] = arr[j];
-        arr[j] = tmp;
-    }
-    return arr;
-};*/
-
 var VIEWPORT_SIDE = 9;
 var VIEWPORT_SIDE_PX = VIEWPORT_SIDE * 32;
 
+/* The one and the only entry point */
 var init_game = function () {
-    Game.grid = new jstile.Grid(15, 15, 32, 32, jstile.ORTHOGONAL);
-	Game.layer0_layer = new jstile.Layer(VIEWPORT_SIDE_PX, VIEWPORT_SIDE_PX, 1);
+	Game.layer0_layer = new jstile.Layer(VIEWPORT_SIDE_PX, VIEWPORT_SIDE_PX, 20); /* is changed to 1 shortly after init */
 	Game.layer1_layer = new jstile.Layer(VIEWPORT_SIDE_PX, VIEWPORT_SIDE_PX, 20);
-	Game.layer2_layer = new jstile.Layer(VIEWPORT_SIDE_PX, VIEWPORT_SIDE_PX, 1);
+	Game.layer2_layer = new jstile.Layer(VIEWPORT_SIDE_PX, VIEWPORT_SIDE_PX, 20);
 	Game.overlayer =    new jstile.Layer(VIEWPORT_SIDE_PX, VIEWPORT_SIDE_PX, 20);
     
-    Game.layer0 = jstile.Sprite.tileFactory(EMPTY_TILE, 0, 0, 1);
-    Game.layer1 = jstile.Sprite.tileFactory(EMPTY_TILE, 0, 0, 1);
-    Game.layer2 = jstile.Sprite.tileFactory(EMPTY_TILE, 0, 0, 1);
-    Game.layer0_layer.addSprite(Game.layer0);
-    Game.layer1_layer.addSprite(Game.layer1);
-    Game.layer2_layer.addSprite(Game.layer2);
-    
-	// create random tiles
-    /*
-	var tiles = [];
-    Game.gridcells = [];
-    var gridrow;
-	for(var x = 0; x < Game.grid.width; ++x) {
-        gridrow = [];
-		for(var y = 0; y < Game.grid.height; ++y) {
-			var offset = Game.grid.offsets[x][y];
-			var cell = jstile.Sprite.tileFactory(
-				Math.floor(Math.random() * 6),
-				offset.left,
-				offset.top,
-				x+y
-			);
-            cell.passable = true;
-			tiles.push(cell);
-            gridrow.push(cell);
-		}
-        Game.gridcells.push(gridrow);
-	}
-	Game.layer0.addChild(tiles);
-    */
-    
-    
+    Game.createLayerRoots();
     
     Game.layer0_layer.init('layer0');
     Game.layer1_layer.init('layer1');
     Game.layer2_layer.init('layer2');
     Game.overlayer.init('overlayer');
     
-    var room = new ZoneRoom(2);
-    /*new ActiveObject(room,     PEOPLE['Sidor'], 4,4);
-    new StaticObject(room,     7, 6,3);
-    new StaticObject(room,     7, 6,4);
-    new StaticObject(room,     7, 7,4);
-    new StaticObject(room,     7, 8,4);
-    new PickableObject(room,   THINGS['Red Key Card'], 8,5);*/
+    Game.world = new World();
+    
     /*
-    new ShootingMonster(room, MONSTER_SETS['Scouttrooper'], 10,8, 10, 1, 1, 27, 0.6);
+    var room = new SimpleRoom(15,15);
+    new ActiveObject(room,     PEOPLE['Sidor'], 6,4);
+    new StaticObject(room,     7, 2,3);
+    new MovableObject(room,     7, 2,4);
+    new MovableHidingObject(room,     7, 3,4, THINGS['10,000 Credits']);
+    new ContainerObject(room, CONTAINER_SETS["sandchest"], 4,4, THINGS['Navicomputer']);
+    new PickableObject(room,   THINGS['Red Key Card'], 7,5);
+    
+    new ShootingMonster(room, MONSTER_SETS['Scouttrooper'], 1,8, 10, 1, 1, 27, 0.6);
     new WanderingMonster(room, MONSTER_SETS['Tusken'], 1,4, 10, 1, 1,  27, 0.6);
-    new WanderingMonster(room, MONSTER_SETS['Jawa'], 5,12, 10, 1, 1, 27, 0.6);*/
+    new WanderingMonster(room, MONSTER_SETS['Jawa'], 5,6, 10, 1, 1, 27, 0.6);
     room.enter();
+    */
     
     Game.player = new Player();
-    Game.player.go_absolute(4,4);
+    /*Game.player.go_absolute(4,5);*/
     
     Game.stopOverlayer();
+    Game.world.startGame();
     
+    Game.layer0_layer.setFramerate(1);
+    Game.layer2_layer.setFramerate(1);
 };
 
 
