@@ -4,12 +4,11 @@
 */
 var Player = function () {
     
-    /* <IGameObject dynamic interface> */
     this.cx = 0;
     this.cy = 0;
     this.obstacle = true;
     this.sprite = null;
-    /* </IGameObject> */
+    
     this.direction = 'down';
     this.prev_direction = 'down';
     

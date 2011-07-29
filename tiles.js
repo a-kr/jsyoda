@@ -391,7 +391,7 @@ var QUEST_PERSONS = [107,108,110,113,119,123,126,
                     230,236,237,244];
 
 var THINGS = {
-    "Lightsaber": 0,
+    "Lightsaber": 89,
     "Pile of Junk": 1,
     "Heap of Junk": 2,
     "5,000 Credits": 4,

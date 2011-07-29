@@ -4,6 +4,7 @@ var Game = {
     currentroom: null,
     player: null,
     world: null,
+    state: 'main', /* or 'overlayer' */
     
     /* layerN : Sprite; layerN_layer: Layer containing a single toplevel sprite layerN */
     layer0: null,
@@ -26,6 +27,7 @@ Game.createLayerRoots = function () {
 };
 
 Game.startOverlayer = function () {
+    Game.state = 'overlayer';
     Game.layer0_layer.stop();
     Game.layer1_layer.stop();
     Game.layer2_layer.stop();
@@ -33,6 +35,7 @@ Game.startOverlayer = function () {
 };
 Game.stopOverlayer = function () {
     Game.overlayer.stop();
+    Game.state = 'main';
     Game.layer0_layer.start();
     Game.layer1_layer.start();
     Game.layer2_layer.start();
@@ -84,6 +87,32 @@ Game.show_speech = function (speaker, text, continuation) {
 /* routines for working with on-screen inventory */
 Game.inventory = {
     items: [],
+    /* player wants to use item on the tile he is facing */ 
+    itemClicked: function (item_div, item_index) {
+        if (Game.state != 'main') return;
+        var deltas = DIRECTIONS[Game.player.direction];
+        var ix = Game.player.cx + deltas.dx, iy = Game.player.cy + deltas.dy;
+        var reciever = Game.currentroom.get_obstacles(ix,iy);
+        var can_go = Game.player.try_goto(ix,iy);
+        if (can_go == 4) return; /* outside of room */
+        if (reciever) {
+            if (reciever.on_item) {
+                if (reciever.on_item(item_index)) {
+                    /* proceed to end of function to remove from inventory */
+                } else {
+                    return;
+                }
+            } else {
+                return;
+            }
+        } else { /* put the item on the ground */
+            var obj = new PickableObject(Game.currentroom, item_index, ix, iy);
+            obj.enterRoom().bringToFront();
+        }
+        /* remove from inventory */
+        item_div.remove();
+    },
+    /* called from Player code */
     addItem: function (item_index) {
         var div = $('<div class="itemdiv"><div class="itemicon"><canvas width=32 height=32></div></div>');
         var label = $('<div class="itemlabel"></div>').text(MAIN_ITEMS[item_index].name);
@@ -93,6 +122,7 @@ Game.inventory = {
         var ctx = itemcanvas[0].getContext('2d');
         jstile.Sprite.directDrawTile(ctx, MAIN_ITEMS[item_index].tile_index);
         div.appendTo('#inventory');
+        div.click(function () { Game.inventory.itemClicked(div, item_index); });
     },
     removeItem: function (item_index) {
     },

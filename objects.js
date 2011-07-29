@@ -13,12 +13,10 @@ var StaticObject = function (room, tile_index, cx, cy, on_frame) {
     this.obstacle = true;
     this.tile_index = tile_index;
     
-    /* <IGameObject dynamic interface> */
     this.cx = cx;
     this.cy = cy;
     this.obstacle = true;
     this.sprite = null;
-    /* </IGameObject> */
     
     if (on_frame) this.on_frame = on_frame;
     
@@ -261,6 +259,7 @@ var BLINK_DELAY = 3; /* number of frames between blinking on and off */
 
 PickableObject.prototype.on_bump = function () {
     this.state = 'BLINKING';
+    this.take_delay = 6;
     Game.player.pickup(this);
 };
 
@@ -273,7 +272,8 @@ PickableObject.prototype.on_frame = function () {
             this.blink_tiles.push(tile);
             this.blinkdelay = BLINK_DELAY;
         }
-        if (jstile.keytracker[32 /* SPACE */]) {
+        if (this.take_delay > 0) this.take_delay--;
+        if (jstile.keytracker[32 /* SPACE */] && this.take_delay <= 0) {
             this.on_pickup();
             Game.player.finish_pickup();
         }
