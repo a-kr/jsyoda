@@ -11,7 +11,8 @@ var Room = function (width, height) {
     this.height = height || STD_ROOM_SIZE;
     this.quest = null;            /* a Quest instance, if any */
     this.entry_point = null;      /* an {x,y} object; used when teleporting into this room 
-                                   * as initial position for player */    
+                                   * as initial position for player */ 
+    this.is_interior = false; /* if true, player can't walk to neighboring rooms */
 };
 
 /* call this to display this room on screen 

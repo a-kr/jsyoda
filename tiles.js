@@ -760,6 +760,14 @@ var PROJECTILE_EXPLOSIONS = {
     "red": null
 };
 
+var DOOR_SETS = {
+    "sandmetal":    {closed: 152, open: 151},
+    "sandred":      {closed: 153, open: 154},
+    "rockhatch":    {closed: 70,  open: 77},
+    "rockbeeline":  {closed: 74,  open: 79},
+    "archwalldoor": {closed: 233, open: 234, overlay: 230},
+};
+
 var CONTAINER_SETS = {
     "sandchest": {closed: 16, open: 17},
     "woodchest": {closed: 258, open: 259},

@@ -46,7 +46,8 @@ StaticObject.prototype.bringToFront = function () {
 /* updates sprite tile */
 StaticObject.prototype.updateTile = function (tile_index) {
     this.tile_index = tile_index;
-    this.sprite.setTile(tile_index);
+    if (this.sprite)
+        this.sprite.setTile(tile_index);
 };
 
 /* updates sprite position.
@@ -211,6 +212,83 @@ ActiveObject.prototype.on_hit = function (damage) {
         return true;
     }
  };
+ 
+ 
+/* ===================================================================================== */
+/* DoorObject: when bumped or given a key, opens (ceases to be an obstacle).             
+ * Optionally, in the opened state can teleport the player somewhere.                    */
+/* @param Object door_set: one of DOOR_SETS
+ * @param Object teleport_target: either a {x,y} specifying a room on World map,
+                                  or a direct Room reference.
+                                  Also, might be null.
+ * @param int required_key: an item_index. If not null, door will open only when the key
+                            is used on the door.
+*/
+var DoorObject = function (room, door_set, cx, cy, teleport_target, required_key) {
+    this.door_set = door_set;
+    this.teleport_target = teleport_target;
+    this.required_key = required_key;
+    this.opened = false;
+    ContainerObject.superclass.constructor.apply(this, [room, -door_set.closed, cx, cy]);
+};
+DoorObject.inheritFrom(ActiveObject);
+
+DoorObject.prototype.on_bump = function () {
+    /* if door is not a teleport and it is opened, there will be no bump */
+    if (this.opened && this.teleport_target) {
+        /* move player on door's tile? */
+        if (this.teleport_target.x !== undefined) {
+            var room = Game.world.cells[this.teleport_target.x][this.teleport_target.y];
+            Game.player.teleport_to_room(room, this.teleport_target.x, this.teleport_target.y);
+        } else {
+            Game.player.teleport_to_room(this.teleport_target)
+        };
+        if (!this.required_key) {
+            this.opened = false;
+            this.updateTile(this.door_set.closed);
+            this.obstacle = true;
+        }
+    } else if (!this.opened && !this.required_key) {
+        this.opened = true;
+        this.updateTile(this.door_set.open);
+        if (!this.teleport_target) {
+            this.obstacle = false;
+        }
+    } else if (!this.opened && this.required_key) {
+        Game.explain("You need " + MAIN_ITEMS[this.required_key].name + " to open this door.");
+    }
+};
+
+DoorObject.prototype.on_item = function (item_index) {
+    if (!this.opened && item_index == this.required_key) {
+        this.opened = true;
+        this.updateTile(this.door_set.open);
+        if (!this.teleport_target) {
+            this.obstacle = false;
+        }
+        Game.explain("You have used " + MAIN_ITEMS[item_index].name + " to open the door.");
+        return true; /* remove key from player */
+    } else if (this.required_key) {
+        Game.explain("Wrong key, you need " + MAIN_ITEMS[this.required_key].name + ".");
+    } else {
+        Game.explain("This door does not need a key.");
+    }
+};
+
+DoorObject.prototype.enterRoom = function () {
+    DoorObject.superclass.enterRoom.apply(this, []);
+    if (this.door_set.overlay) {
+        this.oversprite = jstile.Sprite.tileFactory(this.door_set.overlay, this.sprite.left, this.sprite.top, 5000);
+        Game.layer2.addChild(this.oversprite);
+    }
+};
+
+DoorObject.prototype.leaveRoom = function () {
+    DoorObject.superclass.leaveRoom.apply(this, []);
+    if (this.door_set.overlay) {
+        this.oversprite.remove();
+    }
+};
 
 /* ===================================================================================== */
 /* ContainerObject --- when bumped for the 1st time, releases a contained item           */ 

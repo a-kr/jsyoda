@@ -250,17 +250,7 @@ World.prototype.makePrimeQuest = function (heap, unused_coords) {
         on_solve:       null
     });
     
-    new StaticObject(room,     7, 2,3);
-    new MovableObject(room,     7, 2,4);
-    new MovableHidingObject(room,     7, 3,4, THINGS['10,000 Credits']);
-    new ContainerObject(room, CONTAINER_SETS["sandchest"], 4,4, THINGS['Navicomputer']);
-    new PickableObject(room,   THINGS['Red Key Card'], 7,5);
-    
-    new ShootingMonster(room, MONSTER_SETS['Scouttrooper'], 8,8, 10, 1, 1, random_loot());
-    new WanderingMonster(room, MONSTER_SETS['Tusken'], 1,4, 10, 1, 1, random_loot());
-    new WanderingMonster(room, MONSTER_SETS['Jawa'], 8,3, 10, 1, 1, random_loot());
-    new WanderingMonster(room, MONSTER_SETS['Jawa'], 10,6, 10, 1, 1, random_loot());
-    new WanderingMonster(room, MONSTER_SETS['Jawa'], 5,14, 10, 1, 1, random_loot());
+    this.makeTutorial(room);
     
     this.setRoom(heap[id], room);
 };
@@ -353,3 +343,65 @@ var LocatorScreen = function () {
     Game.overlayer.addSprite(this.sprite);
     
 }
+
+/* Create a couple of tutorial rooms and link parentroom to them */
+World.prototype.makeTutorial = function (parentroom) {
+    var room = new SimpleRoom();
+    room.is_interior = true;
+    room.entry_point = {x:5,y:2};
+    new StaticObject(room,     252, 2,3);
+    new MovableObject(room,     7, 2,4);
+    new MovableHidingObject(room,     7, 3,4, THINGS['10,000 Credits']);
+    new ContainerObject(room, CONTAINER_SETS["sandchest"], 4,4, THINGS['Navicomputer']);
+    /*new PickableObject(room,   THINGS['Red Key Card'], 7,5);*/
+    
+    /*new ShootingMonster(room, MONSTER_SETS['Scouttrooper'], 8,8, 10, 1, 1, random_loot());
+    new WanderingMonster(room, MONSTER_SETS['Tusken'], 1,4, 10, 1, 1, random_loot());
+    new WanderingMonster(room, MONSTER_SETS['Jawa'], 8,3, 10, 1, 1, random_loot());
+    new WanderingMonster(room, MONSTER_SETS['Jawa'], 10,6, 10, 1, 1, random_loot());
+    new WanderingMonster(room, MONSTER_SETS['Jawa'], 5,14, 10, 1, 1, random_loot());*/
+    
+    
+    /* rock with a door */
+    new StaticObject(parentroom, 57, 8,7);
+    new StaticObject(parentroom, 54, 9,7);
+    new StaticObject(parentroom, 54, 10,7);
+    new StaticObject(parentroom, 54, 11,7);
+    new StaticObject(parentroom, 59, 12,7);
+    new StaticObject(parentroom, 67, 8,8);
+    new StaticObject(parentroom, 53, 9,8);
+    new DoorObject(parentroom, DOOR_SETS["rockbeeline"], 10,8, room);
+    new StaticObject(parentroom, 53, 11,8);
+    new StaticObject(parentroom, 69, 12,8);
+    
+    /* wall with a door */
+    new StaticObject(room, 240, 11,0);
+    new StaticObject(room, 240, 11,1);
+    new StaticObject(room, 240, 11,2);
+    new StaticObject(room, 240, 11,3);
+    new StaticObject(room, 240, 11,4);
+    new StaticObject(room, 247, 11,5);
+    new StaticObject(room, 236, 12,5);
+    new DoorObject(room, DOOR_SETS["archwalldoor"], 13,5, null, THINGS["Red Key Card"]);
+    new StaticObject(room, 236, 14,5);
+    new StaticObject(room, 236, 15,5);
+    new StaticObject(room, 236, 16,5);
+    new StaticObject(room, 236, 17,5);
+    
+    new CharacterObject(room, PEOPLE['Fibbs'], 14,6, {
+        unsolved_text:  "I'm supposed to guard this door, but Jawas attacked me and took my %1!" + 
+                        " Can you get it for me? Please? \n They also took the key card for this door :(",        
+        desired_item:   THINGS['Blaster Rifle'],
+        notneeded_text: "No, thanks.",
+        thankyou_text:  "Great! Here's something for your trouble.",
+        payment_item:   THINGS['Pile of Credits'],
+        solved_text:    "Have a nice day!",
+        on_solve:       null
+    });
+    
+    new WanderingMonster(room, MONSTER_SETS['Jawa'], 14,8, 10, 1, 1, THINGS['Blaster Rifle']);
+    new WanderingMonster(room, MONSTER_SETS['Jawa'], 15,7, 10, 1, 1, THINGS["Red Key Card"]);
+    new WanderingMonster(room, MONSTER_SETS['Jawa'], 16,6, 10, 1, 1, random_loot());
+    
+    
+};

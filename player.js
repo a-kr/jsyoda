@@ -30,6 +30,7 @@ var Player = function () {
                               the possibility.
     */
     this.walk_to_room = function (drx, dry, only_test) {
+        if (Game.currentroom.is_interior) return;
         var nrx = this.roomx + drx;
         var nry = this.roomy + dry;
         var room = (Game.world.cells[nrx] || [])[nry];
@@ -196,9 +197,11 @@ var Player = function () {
         /* overlayer uses absolute, not relative positioning */
         this.picked_thing.sprite.setPosition(pos.left, pos.top);
         Game.startOverlayer();
+        Game.explain("Press Space to pick this item up.");
     };
     /* Leave pickup mode */
     this.finish_pickup = function () {
+        Game.explain("You picked up " + MAIN_ITEMS[this.picked_thing.item_index].name + ".");
         this.inventory.push(this.picked_thing);
         Game.inventory.addItem(this.picked_thing.item_index);
         this.picked_thing.leaveRoom() /* remove sprite for good */

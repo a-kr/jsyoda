@@ -78,10 +78,12 @@ Game.show_speech = function (speaker, text, continuation) {
             this.remove();
             $('#speechbubble').hide();
             Game.stopOverlayer();
+            Game.explain(" ");
             if (continuation) continuation();
         }
     };
     Game.overlayer.addSprite(control_sprite);
+    Game.explain("Press Space to close the dialog bubble.");
 };
 
 /* routines for working with on-screen inventory */
@@ -128,6 +130,14 @@ Game.inventory = {
     },
 };
 
+
+Game.explain = function (text) {
+    $('#explanation').text(text);
+    if (Game.explain_clear_timeout) 
+        clearTimeout(Game.explain_clear_timeout);
+    Game.explain_clear_timeout = setTimeout(function () { $('#explanation').text(" ");}, 10000 )
+};
+
 var DIRECTIONS = {  
     up:    {dx: 0, dy: -1},
     down:  {dx: 0, dy: +1},
@@ -172,7 +182,12 @@ var init_game = function () {
         of: '#inventory',
         offset: '0 -1'
     }).css('height', VIEWPORT_SIDE_PX - $('#inventory').height() - 2);
-    
+    $('#explanation').position({
+        my: 'left top',
+        at: 'left bottom',
+        of: '#overlayer',
+        offset: '0 1'
+    }).width(VIEWPORT_SIDE_PX + $('#status').width() + 2);
     Game.world = new World();
     
     /*
