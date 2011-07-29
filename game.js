@@ -58,6 +58,46 @@ Game.positionLayers = function (off_x, off_y) {
     Game.layer2_layer._refresh(true, true); 
 };
 
+/* pauses the game while showing a bubble with text */
+Game.show_speech = function (speaker, text, continuation) {
+    Game.startOverlayer();
+    $('#speechbubble').show().html(text).position({
+        my: 'center top',
+        at: 'center top', 
+        of: '#overlayer',
+    });
+    var control_sprite = jstile.Sprite.tileFactory(EMPTY_TILE, 0, 0, 1);
+    control_sprite.key_delay = 6;
+    control_sprite.onDrawCallback = function () {
+        if (control_sprite.key_delay > 0)
+            control_sprite.key_delay--;
+        else if (jstile.keytracker[32 /* SPACE */]) {
+            this.remove();
+            $('#speechbubble').hide();
+            Game.stopOverlayer();
+            if (continuation) continuation();
+        }
+    };
+    Game.overlayer.addSprite(control_sprite);
+};
+
+/* routines for working with on-screen inventory */
+Game.inventory = {
+    items: [],
+    addItem: function (item_index) {
+        var div = $('<div class="itemdiv"><div class="itemicon"><canvas width=32 height=32></div></div>');
+        var label = $('<div class="itemlabel"></div>').text(MAIN_ITEMS[item_index].name);
+        label.appendTo(div);
+        div.data('item_index', item_index);
+        var itemcanvas = $('canvas', div);
+        var ctx = itemcanvas[0].getContext('2d');
+        jstile.Sprite.directDrawTile(ctx, MAIN_ITEMS[item_index].tile_index);
+        div.appendTo('#inventory');
+    },
+    removeItem: function (item_index) {
+    },
+};
+
 var DIRECTIONS = {  
     up:    {dx: 0, dy: -1},
     down:  {dx: 0, dy: +1},
@@ -88,6 +128,20 @@ var init_game = function () {
     Game.layer1_layer.init('layer1');
     Game.layer2_layer.init('layer2');
     Game.overlayer.init('overlayer');
+    
+    $('#overlayer').css('width', VIEWPORT_SIDE_PX-1).css('height', VIEWPORT_SIDE_PX-1);
+    $('#inventory').position({
+        my: 'left top',
+        at: 'right top', 
+        of: '#overlayer',
+        offset: "1 0"
+    });
+    $('#status').position({
+        my: 'left top',
+        at: 'left bottom', 
+        of: '#inventory',
+        offset: '0 -1'
+    }).css('height', VIEWPORT_SIDE_PX - $('#inventory').height() - 2);
     
     Game.world = new World();
     

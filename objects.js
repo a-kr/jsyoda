@@ -144,15 +144,75 @@ ActiveObject.prototype.on_bump = function () {
     /* default behaviour is to do nothing */
 };
 
-/* when player tries to "give" an item to this object */
+/* when player tries to "give" an item to this object.
+   return value: if true, item is removed from player's inventory.
+                 if false, it stays there.
+*/
 ActiveObject.prototype.on_item = function (item_index) {
     /* default behaviour is to do nothing */
+    return false;
 };
 
 /* when a projectile hits this object */
-StaticObject.prototype.on_hit = function (damage) {
+ActiveObject.prototype.on_hit = function (damage) {
     /* default behaviour is to do nothing */
 };
+
+/* ===================================================================================== */
+/* CharacterObject: when bumped, speaks; when given a certain item, gives another to the 
+ * player.                                                                               *
+ *  @param int char_index: an item_index in MAIN_ITEMS array 
+ *  @param Object behaviour: {
+        unsolved_text:  text which is displayed on bump when state == 'UNSOLVED',        
+        desired_item:   item index of item which, when given to NPC, changes its state to 'SOLVED',
+        notneeded_text: displayed when player gives NPC a non-desired item,
+        thankyou_text:  text which is displayed when player gives desired_item to NPC,
+        payment_item:   item index of item which is given in return for desired_item,
+        solved_text:    text which is displayed on bump when state == 'SOLVED',
+        on_solve:       function that is executed after giving payment_item.
+    }
+    In all text strings, '%1' is replaced with desired_item name, and '%2' is replaced
+    with payment_item name.
+ */
+ var CharacterObject = function (room, char_index, cx, cy, behaviour) {     
+    CharacterObject.superclass.constructor.apply(this, [room, char_index, cx, cy]);
+    this.behaviour = behaviour;
+    this.state = 'UNSOLVED';
+ };
+ 
+ CharacterObject.inheritFrom(ActiveObject);
+ 
+ CharacterObject.prototype.subst_names = function (str) {
+    return str.replace(/%1/g, MAIN_ITEMS[this.behaviour.desired_item].name).
+               replace(/%2/g, (this.behaviour.payment_item ? MAIN_ITEMS[this.behaviour.payment_item].name : ""));
+ };
+ 
+ CharacterObject.prototype.on_bump = function () {
+    if (this.state == 'UNSOLVED') {
+        Game.show_speech(this, this.subst_names(this.behaviour.unsolved_text));
+    } else {
+        Game.show_speech(this, this.subst_names(this.behaviour.solved_text));
+    }
+ };
+ 
+ CharacterObject.prototype.on_item = function (item_index) {
+    if (item_index != this.behaviour.desired_item) {
+        if (this.behaviour.notneeded_text)
+            Game.show_speech(this, this.behaviour.notneeded_text);
+        return false;
+    } else if (this.state == 'UNSOLVED') {
+        this.state = 'SOLVED';
+        Game.show_speech(this, this.subst_names(this.behaviour.thankyou_text), function () {
+            if (this.behaviour.payment_item) {
+                var obj = new PickableObject(this.room, this.behaviour.payment_item, this.cx, this.cy);
+                obj.enterRoom().bringToFront();
+                obj.on_bump();
+            }
+            if (this.behaviour.on_solve) this.on_solve();
+        }.bind(this));
+        return true;
+    }
+ };
 
 /* ===================================================================================== */
 /* ContainerObject --- when bumped for the 1st time, releases a contained item           */ 
@@ -357,11 +417,7 @@ var Projectile = {
             this.left += deltas.dx * speed;
             this.top += deltas.dy * speed;
             
-            /* dies outside the room:
-            if (this.top < 0 || this.top >= Game.grid.heightPx || this.left < 0 || this.left >= Game.grid.widthPx) {
-                this.remove();
-                return;
-            }*/
+            
             this.setPosition(this.left, this.top);
             
             var collide_candidates = [Game.player.sprite];
@@ -377,9 +433,8 @@ var Projectile = {
                     ANIMATIONS["explosion"],
                     victim.left, victim.top, 1000, true);
                 this.parent.addChild(anim);
-                victim.obj.on_hit(damage);
+                if (victim.obj && victim.obj.on_hit) victim.obj.on_hit(damage);
                 this.remove();
-                /* TODO display explosion */
                 return;
             }
         };

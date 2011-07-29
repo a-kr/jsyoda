@@ -4,27 +4,39 @@ var TILESET_COUNT = 9;
 var TILESETS = {
 };
 
-var ensure_tileset_loaded = function (index) {
-    var img = TILESETS[index];
+/* given a tile index, return tileset name and x,y coords in the tileset */
+var get_tile_coords = function (tile_index) {
+    if (tile_index == 65535)
+        tile_index = EMPTY_TILE;
+    var tile = tile_index % TILES_PER_TILESET;
+    return {
+        tileset: Math.floor(tile_index / TILES_PER_TILESET) % TILESET_COUNT,
+        col: tile % TILES_PER_ROW,
+        row: Math.floor(tile / TILES_PER_ROW)
+    };
+};
+
+var ensure_tileset_loaded = function (tileset_index) {
+    var img = TILESETS[tileset_index];
     if (!img) {
-        var filename = 'yotiles/sprites00' + index.toString() + '.png';
-        TILESETS[index] = new jstile.Image(filename, 32, 32, jstile.VERTICAL, TILES_PER_ROW-1, 0);
+        var filename = 'yotiles/sprites00' + tileset_index.toString() + '.png';
+        TILESETS[tileset_index] = new jstile.Image(filename, 32, 32, jstile.VERTICAL, TILES_PER_ROW-1, 0);
     }
 };
 
 /* Create a new sprite and set it to specific tileset and tile */
 jstile.Sprite.tileFactory = function(tile_index, left, top, zindex, onDrawCallback, once, onDone)
 {
-    var tileset = Math.floor(tile_index / TILES_PER_TILESET) % TILESET_COUNT;
-    ensure_tileset_loaded(tileset);
+    var tc = get_tile_coords(tile_index);
+    ensure_tileset_loaded(tc.tileset);
     
     if(jstile.Sprite._recyclebin.length) {
         var sprite = jstile.Sprite._recyclebin.shift();
-        jstile.Sprite.call(sprite, TILESETS[tileset], left, top, zindex, 0, onDrawCallback, once, onDone);
+        jstile.Sprite.call(sprite, TILESETS[tc.tileset], left, top, zindex, 0, onDrawCallback, once, onDone);
         sprite.setTile(tile_index);
         return sprite;
     }
-    var sprite = new this(TILESETS[tileset], left, top, zindex, 0, onDrawCallback, once, onDone);
+    var sprite = new this(TILESETS[tc.tileset], left, top, zindex, 0, onDrawCallback, once, onDone);
     sprite.setTile(tile_index);
     return sprite;
 };
@@ -35,8 +47,8 @@ jstile.Sprite.tileFactory = function(tile_index, left, top, zindex, onDrawCallba
 jstile.Sprite.animationFactory = function(tile_sequence, left, top, zindex, once, onDone)
 {
     var tile_index = tile_sequence[0];
-    var tileset = Math.floor(tile_index / TILES_PER_TILESET) % TILESET_COUNT;
-    ensure_tileset_loaded(tileset);
+    var tc = get_tile_coords(tile_index);
+    ensure_tileset_loaded(tc.tileset);
     
     var frame_delay = 1;
     var on_frame = function () {
@@ -57,10 +69,10 @@ jstile.Sprite.animationFactory = function(tile_sequence, left, top, zindex, once
     
     if(jstile.Sprite._recyclebin.length) {
         var sprite = jstile.Sprite._recyclebin.shift();
-        jstile.Sprite.call(sprite, TILESETS[tileset], left, top, zindex, 0, on_frame, once, onDone);
+        jstile.Sprite.call(sprite, TILESETS[tc.tileset], left, top, zindex, 0, on_frame, once, onDone);
         return sprite;
     }
-    var sprite = new this(TILESETS[tileset], left, top, zindex, 0, on_frame, once, onDone);
+    var sprite = new this(TILESETS[tc.tileset], left, top, zindex, 0, on_frame, once, onDone);
     return sprite;
 };
 
@@ -70,18 +82,25 @@ jstile.Sprite.animationFactory = function(tile_sequence, left, top, zindex, once
     @return jstile.Sprite self
 */
 jstile.Sprite.prototype.setTile = function(tile_index) {
-    if (tile_index == 65535)
-        tile_index = EMPTY_TILE;
-    var tileset = Math.floor(tile_index / TILES_PER_TILESET) % TILESET_COUNT;
-    ensure_tileset_loaded(tileset);
+    var tc = get_tile_coords(tile_index);
+    ensure_tileset_loaded(tc.tileset);
     
-    var tile = tile_index % TILES_PER_TILESET;
-    this.image = TILESETS[tileset];
-    this.frame = tile % TILES_PER_ROW;
-    this.currentframe = Math.floor(tile / TILES_PER_ROW);
+    this.image = TILESETS[tc.tileset];
+    this.frame = tc.col;
+    this.currentframe = tc.row;
     
     this._calculateImageOffset(); 
     return this;
+};
+
+/* Draws specified tile on a given <canvas> context */
+jstile.Sprite.directDrawTile = function (canvascontext, tile_index, x, y) {
+    x = x || 0; y = y || 0;
+    var tc = get_tile_coords(tile_index);
+    ensure_tileset_loaded(tc.tileset);
+    
+    var image = TILESETS[tc.tileset];
+    canvascontext.drawImage(image.node, tc.col * 32, tc.row * 32, 32, 32, x, y, 32, 32);
 };
 
 var MAIN_ITEMS = {

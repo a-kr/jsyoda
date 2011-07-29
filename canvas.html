@@ -3,6 +3,8 @@
 <head>
 <title>jsTile</title>
 
+<script type="text/javascript" src="lib/jquery-1.4.3.min.js"></script>
+<script type="text/javascript" src="lib/jquery-ui.js"></script>
 <script type="text/javascript" src="lib/jstile.js"></script>
 <script type="text/javascript" src="lib/jstile.layer.js"></script>
 <script type="text/javascript" src="lib/jstile.image.js"></script>
@@ -23,11 +25,71 @@ window.onload = function(){
 	init_game();
 };
 </script>
+
+<style>
+#speechbubble {
+    border: solid 1px #333333;
+    background-color: white;
+    border-radius: 8px;
+    font-family: tahoma, sans, sans-serif;
+    font-size: 12px;
+    padding: 6px;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    display: none;
+}
+
+#overlayer {
+    border: solid 1px gray;
+}
+
+#inventory {
+    position: absolute;
+    overflow-y: auto;
+    border: solid 1px gray;
+    width: 206px;
+    height: 228px;
+}
+
+#status {
+    border: solid 1px gray;
+    width: 206px;
+}
+.itemdiv {
+    height: 32px;
+    font-family: tahoma, sans, sans-serif;
+}
+.itemicon {
+    
+}
+
+.itemlabel {
+    position: relative;
+    top: -28px;
+    left: 34px;
+    width: 150px;
+    font-size: 14px;
+}
+</style>
+
 </head>
 <body>
-	<div style="position: absolute;" id="layer0"></div>
-	<div style="position: absolute;" id="layer1"></div>
-	<div style="position: absolute;" id="layer2"></div>
-	<div style="position: absolute;" id="overlayer"></div>
+    <div style="position: absolute;" id="layer0"></div>
+    <div style="position: absolute;" id="layer1"></div>
+    <div style="position: absolute;" id="layer2"></div>
+    <div style="position: absolute;" id="overlayer">
+        <div id='speechbubble'></div>
+    </div>
+    
+    <div id="inventory">
+        
+    </div>
+    <div id="status">
+    </div>
+    
+    
+    
+    
 </body>
 </html>

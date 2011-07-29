@@ -201,6 +201,7 @@ var Player = function () {
     /* Leave pickup mode */
     this.finish_pickup = function () {
         this.inventory.push(this.picked_thing);
+        Game.inventory.addItem(this.picked_thing.item_index);
         this.picked_thing.leaveRoom() /* remove sprite for good */
         this.picked_thing = null;
         /* TODO: display a notification? */
@@ -258,6 +259,8 @@ var Player = function () {
     
     /* this is called on every frame, unless overlayer is active */
     this.on_frame = function () {
+        /*Game.overlayer.layer.focus();*/
+        /* inventory list box must not intercept keyboard events */
         if (this.controls_enabled) {
             for (var keycode in this.keymap) {
                 if (jstile.keytracker[keycode])

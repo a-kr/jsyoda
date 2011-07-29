@@ -240,7 +240,16 @@ World.prototype.makePrimeQuest = function (heap, unused_coords) {
     room.quest = new Quest("home", "Start");
     room.entry_point = {x:7,y:7};
     
-    new ActiveObject(room,     PEOPLE['Sidor'], 6,4);
+    new CharacterObject(room, PEOPLE['Sidor'], 6,4, {
+        unsolved_text:  "I want %1!!",        
+        desired_item:   THINGS['10,000 Credits'],
+        notneeded_text: "No, thanks.",
+        thankyou_text:  "Great! I will give you %2 for your trouble.",
+        payment_item:   THINGS['Lightsaber'],
+        solved_text:    "Have a nice day!",
+        on_solve:       null
+    });
+    
     new StaticObject(room,     7, 2,3);
     new MovableObject(room,     7, 2,4);
     new MovableHidingObject(room,     7, 3,4, THINGS['10,000 Credits']);
