@@ -74,7 +74,7 @@ Game.show_speech = function (speaker, text, continuation) {
     control_sprite.onDrawCallback = function () {
         if (control_sprite.key_delay > 0)
             control_sprite.key_delay--;
-        else if (jstile.keytracker[32 /* SPACE */]) {
+        else if (jstile.keytracker[32 /* SPACE */] || jstile.keytracker[13 /* Enter */]) {
             this.remove();
             $('#speechbubble').hide();
             Game.stopOverlayer();
@@ -83,7 +83,7 @@ Game.show_speech = function (speaker, text, continuation) {
         }
     };
     Game.overlayer.addSprite(control_sprite);
-    Game.explain("Press Space to close the dialog bubble.");
+    Game.explain("Press Enter or Space to close the dialog bubble.");
 };
 
 /* routines for working with on-screen inventory */

@@ -351,7 +351,6 @@ World.prototype.makeTutorial = function (parentroom) {
     room.entry_point = {x:5,y:2};
     new StaticObject(room,     252, 2,3);
     new MovableObject(room,     7, 2,4);
-    new MovableHidingObject(room,     7, 3,4, THINGS['10,000 Credits']);
     new ContainerObject(room, CONTAINER_SETS["sandchest"], 4,4, THINGS['Navicomputer']);
     /*new PickableObject(room,   THINGS['Red Key Card'], 7,5);*/
     
@@ -370,9 +369,11 @@ World.prototype.makeTutorial = function (parentroom) {
     new StaticObject(parentroom, 59, 12,7);
     new StaticObject(parentroom, 67, 8,8);
     new StaticObject(parentroom, 53, 9,8);
-    new DoorObject(parentroom, DOOR_SETS["rockbeeline"], 10,8, room);
+    new DoorObject(parentroom, DOOR_SETS["rockbeeline"], 10,8, room, undefined, {x:3,y:3});
     new StaticObject(parentroom, 53, 11,8);
     new StaticObject(parentroom, 69, 12,8);
+    
+    new DoorObject(room, DOOR_SETS["rockbeeline"], 3,4, parentroom, undefined, {x:10,y:9});
     
     /* wall with a door */
     new StaticObject(room, 240, 11,0);
@@ -387,6 +388,8 @@ World.prototype.makeTutorial = function (parentroom) {
     new StaticObject(room, 236, 15,5);
     new StaticObject(room, 236, 16,5);
     new StaticObject(room, 236, 17,5);
+    
+    new MovableHidingObject(room,     7, 15,3, THINGS['10,000 Credits']);
     
     new CharacterObject(room, PEOPLE['Fibbs'], 14,6, {
         unsolved_text:  "I'm supposed to guard this door, but Jawas attacked me and took my %1!" + 

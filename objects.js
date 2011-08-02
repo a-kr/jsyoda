@@ -224,8 +224,9 @@ ActiveObject.prototype.on_hit = function (damage) {
  * @param int required_key: an item_index. If not null, door will open only when the key
                             is used on the door.
 */
-var DoorObject = function (room, door_set, cx, cy, teleport_target, required_key) {
+var DoorObject = function (room, door_set, cx, cy, teleport_target, required_key, inroom_coords) {
     this.door_set = door_set;
+    this.inroom_coords = inroom_coords;
     this.teleport_target = teleport_target;
     this.required_key = required_key;
     this.opened = false;
@@ -239,9 +240,9 @@ DoorObject.prototype.on_bump = function () {
         /* move player on door's tile? */
         if (this.teleport_target.x !== undefined) {
             var room = Game.world.cells[this.teleport_target.x][this.teleport_target.y];
-            Game.player.teleport_to_room(room, this.teleport_target.x, this.teleport_target.y);
+            Game.player.teleport_to_room(room, this.teleport_target.x, this.teleport_target.y, this.inroom_coords);
         } else {
-            Game.player.teleport_to_room(this.teleport_target)
+            Game.player.teleport_to_room(this.teleport_target, undefined, undefined, this.inroom_coords)
         };
         if (!this.required_key) {
             this.opened = false;
@@ -351,7 +352,7 @@ PickableObject.prototype.on_frame = function () {
             this.blinkdelay = BLINK_DELAY;
         }
         if (this.take_delay > 0) this.take_delay--;
-        if (jstile.keytracker[32 /* SPACE */] && this.take_delay <= 0) {
+        if ((jstile.keytracker[32 /* SPACE */] || jstile.keytracker[13 /* Enter */]) && this.take_delay <= 0) {
             this.on_pickup();
             Game.player.finish_pickup();
         }

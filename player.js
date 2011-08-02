@@ -17,12 +17,15 @@ var Player = function () {
     
     this.inventory = [];
     
-    this.teleport_to_room = function (room, rx, ry) {
+    this.teleport_to_room = function (room, rx, ry, inroom_coords) {
         if (rx !== undefined) {
             this.roomx = rx; this.roomy = ry;
         }
         room.enter();
-        this.go_absolute(room.entry_point.x, room.entry_point.y);
+        if (inroom_coords)
+            this.go_absolute(inroom_coords.x, inroom_coords.y);
+        else
+            this.go_absolute(room.entry_point.x, room.entry_point.y);
     };
     
     /* enter another room by crossing the border
@@ -197,7 +200,7 @@ var Player = function () {
         /* overlayer uses absolute, not relative positioning */
         this.picked_thing.sprite.setPosition(pos.left, pos.top);
         Game.startOverlayer();
-        Game.explain("Press Space to pick this item up.");
+        Game.explain("Press Enter or Space to pick this item up.");
     };
     /* Leave pickup mode */
     this.finish_pickup = function () {

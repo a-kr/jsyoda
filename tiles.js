@@ -765,7 +765,7 @@ var DOOR_SETS = {
     "sandred":      {closed: 153, open: 154},
     "rockhatch":    {closed: 70,  open: 77},
     "rockbeeline":  {closed: 74,  open: 79},
-    "archwalldoor": {closed: 233, open: 234, overlay: 230},
+    "archwalldoor": {closed: 2128, open: 2129},
 };
 
 var CONTAINER_SETS = {
