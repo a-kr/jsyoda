@@ -75,6 +75,7 @@ var Player = function () {
             return;
         this.sprite.setTile(PLAYER_IMGS[new_dir]);
         this.direction = new_dir;
+        /* screen will not be immediately redrawn! */
     };
     
     /* checks whether it is possible to move to specified coords. 

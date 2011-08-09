@@ -10,7 +10,16 @@ var shuffle = function (arr) {
         arr[rc] = tmp;
      }
      return arr;
-}
+};
+
+var pickRandomKey = function (obj) {
+    var result;
+    var count = 0;
+    for (var prop in obj)
+        if (Math.random() < 1/++count)
+           result = prop;
+    return result;
+};
 
 /* World: a set of Rooms along with quest tree */
 var World = function (seed) {
@@ -60,9 +69,9 @@ var World = function (seed) {
         var right_child_id = left_child_id+1;
         if (left_child_id >= leafs[0] && questheap[right_child_id]) {
             /* this node has two childs and they are both leafs */
-            if (Math.random() < 0.333) {
+            /*if (Math.random() < 0.333) {
                 questheap[right_child_id] = undefined;
-            }
+            }*/
         }
     }
     
@@ -73,7 +82,7 @@ var World = function (seed) {
     var unused_items = this.quest_items.slice(QUESTNODE_COUNT+1);
     this.quest_items = this.quest_items.slice(0, QUESTNODE_COUNT+1); 
     /* questheap[i] will GIVE player quest_items[i] after quest completion,
-       but quest_items[0] is the item that prime quest giver desires.
+       but quest_items[0] is the item that prime quest giver (yoda) desires.
     */
     this.quest_items[0] = this.quest_items[1];
     
@@ -100,11 +109,11 @@ var World = function (seed) {
     */
     
     /* Leaf quests */
-    /* one of them will require an item that we will get from Yoda */
+    /* first of them will require an item that we will get from Yoda */
     this.starter_item = null; /*  */
     for (var i = 0; i < leafs.length; i++) {
         if (!questheap[leafs[i]]) continue;
-        var item = unused_items.shift();
+        var item = unused_items.shift(); /* the quest will require to bring this item, or no item at all */
         if (!this.starter_item)
             this.starter_item = item;
         this.makeLeafQuest(questheap, leafs[i], item, coordset);
@@ -128,10 +137,17 @@ var World = function (seed) {
     shuffle(this.trade_repo);
     for (var i = 0; i < TRADER_COUNT; i++) {
         var coord = coordset.shift();
+        if (i == 0) {
+            /* place first trader in a cell adjacent to the start position */
+            var possible_deltas = [{dx:-1,dy:0}, {dx:1,dy:0}, {dx:0,dy:1}, {dx:0,dy:-1}];
+            shuffle(possible_deltas);
+            var d = possible_deltas[0];
+            coord = {x: this.start_pos.x + d.dx, y: this.start_pos.y + d.dy};
+        }
         var inventory = BASE_TRADE.slice(0);
-        for (var ii = 0; ii < this.trade_repo.count; ii++)
+        for (var ii = 0; ii < this.trade_repo.length; ii++)
             inventory.push(this.trade_repo[ii]);
-        for (var ii = 0; ii < 3; ii++) 
+        for (var ii = 0; ii < 2; ii++) 
             inventory.push(unused_items.shift());
         
         this.makeTrader(coord, inventory, unused_persons.shift());
@@ -146,6 +162,21 @@ var World = function (seed) {
     
     
     /* connected component grows around start position */
+    
+    /* this function makes path from point a {x,y}, to point b */
+    var connect = function (a, b) {
+        var dx = (b.x == a.x) ? 0: Math.round((b.x - a.x) / Math.abs(b.x - a.x));
+        var dy = (b.y == a.y) ? 0: Math.round((b.y - a.y) / Math.abs(b.y - a.y));
+        var x = a.x; 
+        var y = a.y;
+        for (; y != b.y; y += dy)
+            if (!this.cells[x][y])
+                this.makeWilderness(x,y);
+        for (; x != b.x; x += dx)
+            if (!this.cells[x][y])
+                this.makeWilderness(x,y);
+    }.bind(this);
+    
     var connected = [{x: this.start_pos.x, y: this.start_pos.y, room: this.cells[this.start_pos.x][this.start_pos.y]}];
     while (unconnected.length > 0) {    
         var r = unconnected.shift();
@@ -160,18 +191,17 @@ var World = function (seed) {
                 closest_dist = dist;
             }
         }
-        var dx = (closest.x == r.x) ? 0: Math.round((closest.x - r.x) / Math.abs(closest.x - r.x));
-        var dy = (closest.y == r.y) ? 0: Math.round((closest.y - r.y) / Math.abs(closest.y - r.y));
         /* connect r and closest by placing wilderness tiles on the path */
-        var x = r.x; 
-        var y = r.y;
-        for (; y != closest.y; y += dy)
-            if (!this.cells[x][y])
-                this.makeWilderness(x,y);
-        for (; x != closest.x; x += dx)
-            if (!this.cells[x][y])
-                this.makeWilderness(x,y);
+        connect(r, closest);
         connected.push(r);
+    }
+    
+    /* we now have a minimal spanning tree, but for better accessibility
+       let's connect all quest cells to start point directly */
+    for (var i = 1; i < questheap.length; i++) {
+        var p = questheap[i];
+        if (!p) continue;
+        connect(p, this.start_pos);
     }
     
 };
@@ -185,20 +215,128 @@ World.prototype.setRoom = function(coords, room) {
 World.prototype.makeWilderness = function (x,y) {
     var room = new SimpleRoom();
     this.setRoom({x: x, y: y}, room);
+    
+    this.populateWithMonsters(room);
+};
+
+/* Spawns some random monsters in the room.
+   Returns name of the monster set.
+*/
+World.prototype.populateWithMonsters = function (room) {
+    var monster_set = pickRandomKey(MONSTER_SETS);
+    var MonsterClass = SHOOTING_MONSTERS[monster_set] ? ShootingMonster : WanderingMonster;
+    
+    var count = 8 + Math.round(Math.random() * 8);
+    for (var i = 0; i < count; i++) {
+        var x = Math.floor(Math.random() * room.width);
+        var y = Math.floor(Math.random() * room.height);
+        new MonsterClass(room, MONSTER_SETS[monster_set], x,y, 10, 1, 1, random_loot(0.33));
+    }
+    
+    return monster_set;
 };
 
 World.prototype.makeLeafQuest = function (heap, id, item, unused_coords) {
-    /* leaf quest can be a non-person, e.g. "find something useful here" */
-    /* or it can be a person giving something for free */
+    /* leaf quest can be a non-person, e.g. "find something useful here"
+     * or it can be a person giving something for free.
+     * special case: a person who wants `item` (if item == this.starter_item);
+     *               this item is given by Yoda at the beginning.
+    */
     console.warn("I'm", MAIN_ITEMS[this.quest_persons[id]].name, "(leaf)",
                  "at", heap[id].x, heap[id].y, 
                  "and I will give", MAIN_ITEMS[this.quest_items[id]].name,
                  "in exchange for", MAIN_ITEMS[item].name);
+    
     var room = new SimpleRoom();
     room.quest = new Quest("puzzle", "Find something useful");
     this.setRoom(heap[id], room);
+    
+    var quest_type = Math.floor(Math.random() * 4);
+    if (item == this.starter_item) quest_type = -1; 
+    switch (quest_type) {
+        case -1: /* requires starter item */
+            room.quest.description = "Requires " + MAIN_ITEMS[item].name;
+            var person = new CharacterObject(room, this.quest_persons[id], 
+                Math.round(room.width/2), Math.round(room.height/2), {
+                    unsolved_text:  "Bring me %1! I will reward you with %2.",        
+                    desired_items:   this.starter_item,
+                    notneeded_text: "No, thanks.",
+                    thankyou_text:  "Great! Here's your %2.",
+                    payment_item:   this.quest_items[id],
+                    solved_text:    "Have a nice day!",
+            });
+            break;
+            
+        case 0: /* person needs item which can be bought from traders */
+            room.quest.description = "Requires " + MAIN_ITEMS[item].name;
+            this.trade_repo.push(item);
+            var person = new CharacterObject(room, this.quest_persons[id], 
+                Math.round(room.width/2), Math.round(room.height/2), {
+                    unsolved_text:  "Could you get me %1? I heard junk traders sell them. I'll give you %2 in exchange.",        
+                    desired_items:   item,
+                    notneeded_text: "No, thanks.",
+                    thankyou_text:  "Great! Here's your %2.",
+                    payment_item:   this.quest_items[id],
+                    solved_text:    "Have a nice day!",
+            });
+            break;
+            
+        case 1: /* item in a chest */
+            var chest = new ContainerObject(room, CONTAINER_SETS["sandchest"], 
+                Math.round(room.width/2), Math.round(room.height/2), this.quest_items[id]);
+            chest.on_open = function () {
+                room.quest.solved = true;
+            };
+            /* some monsters to guard it */
+            this.populateWithMonsters(room);
+            break;
+            
+        case 2: /* kill some monsters, bring a proof */
+            var monster_set = this.populateWithMonsters(room);
+            var person = new CharacterObject(room, this.quest_persons[id], 
+                Math.round(room.width/2), Math.round(room.height/2), {
+                    unsolved_text:  "These " + monster_set + "s are horrible! They took my %1!! " +
+                                    "Please, kill them and get my %1 back.",        
+                    desired_items:   item,
+                    notneeded_text: "No, thanks.",
+                    thankyou_text:  "Thank you, oh thank you! I hope this %2 will suffice as the payment.",
+                    payment_item:   this.quest_items[id],
+                    solved_text:    "Have a nice day!",
+            });
+            
+            /* only one monster will have the desired item */
+            var MonsterClass = SHOOTING_MONSTERS[monster_set] ? ShootingMonster : WanderingMonster;
+            var x = Math.floor(Math.random() * room.width);
+            var y = Math.floor(Math.random() * room.height);
+            new MonsterClass(room, MONSTER_SETS[monster_set], x,y, 10, 1, 1, item);
+            
+            break;
+            
+        case 3: /* charity */
+            var person = new CharacterObject(room, this.quest_persons[id], 
+                Math.round(room.width/2), Math.round(room.height/2), {
+                    desired_items:   [],
+                    payment_item:   this.quest_items[id],
+                    solved_text:    "Have a nice day!",
+            });
+            person.on_bump = function () {
+                if (this.state == 'UNSOLVED') {
+                    Game.show_speech(this, "Wandering in the desert is dangerous! Here, take this.", function () {
+                        var obj = new PickableObject(this.room, this.behaviour.payment_item, this.cx, this.cy);
+                        obj.enterRoom().bringToFront();
+                        obj.on_bump();
+                        this.state = 'SOLVED';
+                        this.room.quest.solved = true;
+                    }.bind(this));
+                } else {
+                    Game.show_speech(this, this.subst_names(this.behaviour.solved_text));
+                }
+            };
+            break;
+    }
 };
 
+/* This quest requires player to bring two items in exchange of one. */
 World.prototype.makeBinaryIntermQuest = function (heap, id, unused_coords) {
     /* has both children */
     var left_child_id = 2*id;
@@ -213,8 +351,21 @@ World.prototype.makeBinaryIntermQuest = function (heap, id, unused_coords) {
     var room = new SimpleRoom();
     room.quest = new Quest("puzzle", "requires two items");
     this.setRoom(heap[id], room);
+    
+    var person = new CharacterObject(room, this.quest_persons[id], 
+        Math.round(room.width/2), Math.round(room.height/2), {
+            unsolved_text:  "Bring me %1. I will pay you with %2.",        
+            bringmore_text: "Okay. Bring %1, and we will close the deal.",
+            desired_items:   [this.quest_items[left_child_id], this.quest_items[right_child_id]],
+            notneeded_text: "No, thanks.",
+            thankyou_text:  "Great. Here's your %2. Pleasure doing business with you.",
+            payment_item:   this.quest_items[id],
+            solved_text:    "Have a nice day!",
+    });
+    room.quest.description = person.subst_names("Requires %1");
 };
 
+/* Simple quest: player is required to bring item A to get item B as a reward */
 World.prototype.makeSingleIntermQuest = function (heap, id, unused_coords) {
     /* only one child, left or right */
     var left_child_id = 2*id;
@@ -227,6 +378,17 @@ World.prototype.makeSingleIntermQuest = function (heap, id, unused_coords) {
     var room = new SimpleRoom();
     room.quest = new Quest("puzzle", "requires " + MAIN_ITEMS[this.quest_items[child]].name, true);
     this.setRoom(heap[id], room);
+    
+    var person = new CharacterObject(room, this.quest_persons[id], 
+        Math.round(room.width/2), Math.round(room.height/2), {
+            unsolved_text:  "I really need %1. Can you get it for me? I can give you %d in exchange.",        
+            desired_items:   this.quest_items[child],
+            notneeded_text: "No, thanks.",
+            thankyou_text:  "Just what I needed. Here's your %2. Pleasure doing business with you.",
+            payment_item:   this.quest_items[id],
+            solved_text:    "Have a nice day!",
+    });
+    room.quest.description = person.subst_names("Requires %1");
 };
 
 World.prototype.makePrimeQuest = function (heap, unused_coords) {
@@ -240,34 +402,97 @@ World.prototype.makePrimeQuest = function (heap, unused_coords) {
     room.quest = new Quest("home", "Start");
     room.entry_point = {x:7,y:7};
     
-    new CharacterObject(room, PEOPLE['Sidor'], 6,4, {
-        unsolved_text:  "I want %1!!",        
-        desired_item:   THINGS['10,000 Credits'],
+    var person = new CharacterObject(room, this.quest_persons[id], 7,6, {
+        unsolved_text:  "Bring me %1, Luke!",        
+        desired_items:   this.quest_items[id],
         notneeded_text: "No, thanks.",
-        thankyou_text:  "Great! I will give you %2 for your trouble.",
-        payment_item:   THINGS['Lightsaber'],
+        thankyou_text:  "At last! Your quest is complete now.",
+        payment_item:   null,
         solved_text:    "Have a nice day!",
-        on_solve:       null
+        on_solve: function () { Game.explain("You won! Game over."); }
     });
+    
+    room.quest.npc = person;
     
     this.makeTutorial(room);
     
     this.setRoom(heap[id], room);
 };
 
+/* Places a trader in the room */
 World.prototype.makeTrader = function (coord, inventory, person) {
     var room = new SimpleRoom();
-    room.quest = new Quest("", "Shop", true);
+    room.quest = new Quest("", "Junk trader", true);
     this.setRoom(coord, room);
+    
+    var person = new CharacterObject(room, person, 
+        Math.round(room.width/2), Math.round(room.height/2), {
+            unsolved_text:  "I'm a junk trader! Bring me junk, weapons or credits, and I'll give you something in exchange.",        
+            desired_items:   BARTERABLE.slice(0),
+            notneeded_text: "No, thanks. Bring me junk, weapons or credits.",
+            bringmore_text: null,
+            thankyou_text:  "<none>",
+            payment_item:   null,
+            solved_text:    "<none>",
+            
+    });
+    person.behaviour.on_bringmore = function (given_item_index) {
+        /* restore desired item set */
+        this.behaviour.desired_items = BARTERABLE.slice(0);
+        this.state = 'UNSOLVED';
+        var store_text = "Tradeable. Now select something from my store of goods:\n";
+        for (var i = 0; i < inventory.length; i++) {
+            store_text += "[" + i + "] " + MAIN_ITEMS[inventory[i]].name + "\n"
+        }
+        store_text += "(input a number 0.." + (inventory.length-1) + " and press Enter)";
+        
+        Game.startOverlayer();
+        var chosen = prompt(store_text, "0");
+        Game.stopOverlayer();
+        var item_to_give;
+        if (chosen === null) {
+            /* player cancelled the transaction */
+            item_to_give = given_item_index;
+        } else {
+            chosen = Math.floor(Number(chosen.trim()));
+            if (isNaN(chosen) || chosen < 0 || chosen >= inventory.length) {
+                /* wrong input */
+                Game.explain("There is no such item in the store.")
+                item_to_give = given_item_index;
+            } else {
+                item_to_give = inventory[chosen];
+            }
+        }
+        var obj = new PickableObject(this.room, item_to_give, this.cx, this.cy);
+        obj.enterRoom().bringToFront();
+        obj.on_bump();
+        
+    }.bind(person);
 };
 
-/* Moves the player to the starting room */
+/* Moves the player to the starting room and plays intro sequence */
 World.prototype.startGame = function () {
     var r = this.cells[this.start_pos.x][this.start_pos.y];
     Game.player.teleport_to_room(r, this.start_pos.x, this.start_pos.y);
+    Game.player.set_direction('up');
+    
+    var world = this;
+    setTimeout( function () {
+        Game.show_speech(r.quest.npc, 
+            "Bring me " + MAIN_ITEMS[world.quest_items[0]].name + ", Luke! " + 
+            "Take this, I hope it will help you in your quest.",
+            function () {
+                var obj = new PickableObject(this.room, world.starter_item, this.cx, this.cy);
+                obj.enterRoom().bringToFront();
+                obj.on_bump();
+            }.bind(r.quest.npc)
+        )
+    }, 500);
+    
 };
 
-/* Quest objects - an annotation for Room */
+/*==========================================================================*/
+/* Quest objects - an annotation for Room                                   */
 var Quest = function (kind, description, is_trader) {
     this.kind = kind;
     this.description = description; /* for map */
@@ -316,9 +541,12 @@ var LocatorScreen = function () {
                 /* TODO */
                 if (i == Game.world.start_pos.x && j == Game.world.start_pos.y)
                     cell = mkcell("home");
-                else if (room.quest && room.quest.kind) {
+                else if (!room.visited) 
+                    cell = mkcell("unvisited");
+                else if (room.quest && room.quest.is_trader)
+                    cell = mkcell("trader");
+                else if (room.quest && room.quest.kind)
                     cell = mkcell((room.quest.solved ? "solved" : "") + room.quest.kind);
-                }   
                 else
                     cell = mkcell("wilderness");
             }
@@ -326,7 +554,36 @@ var LocatorScreen = function () {
         }
     }
     
+    onMouseMove = function (evt) {
+        var i = Math.floor((evt.pageX - this.offsetLeft) / 28);
+        var j = Math.floor((evt.pageY - this.offsetTop) / 28);
+        if (i < 0 || j < 0 || i >= WORLDSIDE || j >= WORLDSIDE) 
+            return;
+        var room = Game.world.cells[i][j];
+        var hint = "";
+        if (room) {
+            if (i == Game.world.start_pos.x && j == Game.world.start_pos.y)
+                hint = "Starting location";
+            else if (!room.visited) 
+                hint = "Unvisited";
+            else if (room.quest && room.quest.is_trader) {
+                hint = "Trading post";
+            }
+            else if (room.quest && room.quest.kind) {
+                hint = room.quest.description;
+                if (room.quest.solved) 
+                    hint += " (solved!)";
+            }
+            else
+                hint = "Wilderness";
+        };
+        Game.explain(hint);
+    };
+    
+    $('#overlayer').mousemove(onMouseMove);
+    
     this.destroy = function () {
+        $('#overlayer').mousemove(function () {});
         this.sprite.remove();
         Game.player.move_delay = 3; /* key is still pressed, prevent immediate return to this screen */
         Game.stopOverlayer();
@@ -344,9 +601,10 @@ var LocatorScreen = function () {
     
 }
 
+/* =========================================================================== */
 /* Create a couple of tutorial rooms and link parentroom to them */
 World.prototype.makeTutorial = function (parentroom) {
-    var room = new SimpleRoom();
+    var room = new SimpleRoom(18,18);
     room.is_interior = true;
     room.entry_point = {x:5,y:2};
     new StaticObject(room,     252, 2,3);
@@ -394,7 +652,7 @@ World.prototype.makeTutorial = function (parentroom) {
     new CharacterObject(room, PEOPLE['Fibbs'], 14,6, {
         unsolved_text:  "I'm supposed to guard this door, but Jawas attacked me and took my %1!" + 
                         " Can you get it for me? Please? \n They also took the key card for this door :(",        
-        desired_item:   THINGS['Blaster Rifle'],
+        desired_items:   THINGS['Blaster Rifle'],
         notneeded_text: "No, thanks.",
         thankyou_text:  "Great! Here's something for your trouble.",
         payment_item:   THINGS['Pile of Credits'],

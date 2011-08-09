@@ -354,6 +354,7 @@ var MAIN_ITEMS = {
 
 /* Indices below point into array MAIN_ITEMS */
 var BASE_TRADE = [84,92]; /* medpack and blaster rifle */
+var BARTERABLE = [1,2,5,7,22,91,92,93,]; /* these items are accepted by traders as payment */
 
 var LOOT = [1,2,5,7,22,62,86,92,93,143,144,145,];
 var GENERIC_KEYCARDS = [154,155,156,157,158,160,161,164,165,166,167,211,213,];
@@ -370,7 +371,7 @@ var random_loot = function (chance) {
     return null;
 };
             
-var QUEST_ITEMS = [0,8,10,11,12,13,14,15,16,17,18,
+var QUEST_ITEMS = [8,10,11,12,13,14,15,16,17,18,
                    19,20,21,23,24,25,26,27,28,29,30,
                    31,32,33,34,35,36,37,38,39,40,41,
                    42,43,44,46,47,48,49,50,51,52,53,
@@ -734,7 +735,16 @@ var MONSTER_SETS = {
     'Hydra':         {left: 1744, right: 1745, up: 1744, down: 1745},  
     'IG88':          {left: 1783, right: 1784, up: 1782, down: 1769},    
     'R2':            {left: 1775, right: 1774, up: 1777, down: 1776}  
-        /* todo: sprite07 and 08 */
+        /* todo: pages sprite07 and 08 */
+};
+
+var SHOOTING_MONSTERS = {
+    'Stormtrooper':  true,
+    'Snowtrooper':   true,
+    'Scouttrooper':  true,
+    'Fett': true,
+    'Heavytrooper': true,
+    'IG88': true
 };
 
 var AUTO_MONSTERS = {
@@ -811,5 +821,7 @@ var LOCATOR_TILES = {
     "teleport": 833,
     "unvisited": 835,
     "nothing": 836,
-    "here": 837
+    "here": 837,
+    
+    "trader": 2130,
 };

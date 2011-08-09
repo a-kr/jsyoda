@@ -1,4 +1,4 @@
-var STD_ROOM_SIZE = 18; /* size of exterior rooms (interior may be of any size) */
+var STD_ROOM_SIZE = 13; /* size of exterior rooms (interior may be of any size) */
 
 /* ======================================================================== */
 /* Room containing objects and terrain data.
@@ -13,6 +13,7 @@ var Room = function (width, height) {
     this.entry_point = null;      /* an {x,y} object; used when teleporting into this room 
                                    * as initial position for player */ 
     this.is_interior = false; /* if true, player can't walk to neighboring rooms */
+    this.visited = false; /* is set to true when player enters the roomfor the first time */
 };
 
 /* call this to display this room on screen 
@@ -21,6 +22,8 @@ var Room = function (width, height) {
  * @param int scroll_dy: +1 means 'player went down' (scrolling up)
  */
 Room.prototype.enter = function (enterCallback, scroll_dx, scroll_dy) {
+    this.visited = true;
+    
     this.old_layer0 = Game.layer0;
     this.old_layer1 = Game.layer1;
     this.old_layer2 = Game.layer2;

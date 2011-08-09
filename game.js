@@ -105,6 +105,7 @@ Game.inventory = {
                     return;
                 }
             } else {
+                Game.explain("You cannot use this item here.");
                 return;
             }
         } else { /* put the item on the ground */
@@ -125,7 +126,16 @@ Game.inventory = {
         jstile.Sprite.directDrawTile(ctx, MAIN_ITEMS[item_index].tile_index);
         div.appendTo('#inventory');
         div.click(function () { Game.inventory.itemClicked(div, item_index); });
+        div.hover(Game.inventory.itemMouseEnter, Game.inventory.itemMouseLeave);
     },
+    itemMouseEnter: function (evt) {
+        Game.previous_explanation = $('#explanation').text();
+        Game.explain('Click to use this item.');
+    },
+    itemMouseLeave: function (evt) {
+        Game.explain(Game.previous_explanation);
+    },
+    
     removeItem: function (item_index) {
     },
 };

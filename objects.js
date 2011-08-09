@@ -163,55 +163,101 @@ ActiveObject.prototype.on_hit = function (damage) {
  *  @param int char_index: an item_index in MAIN_ITEMS array 
  *  @param Object behaviour: {
         unsolved_text:  text which is displayed on bump when state == 'UNSOLVED',        
-        desired_item:   item index of item which, when given to NPC, changes its state to 'SOLVED',
+        desired_items:  an array of item indices; when an item from this array is given to NPC,
+                         this item is removed from the array; if array is empty, state is changed to 
+                         'SOLVED'; otherwise, `bringmore_text` is displayed.
         notneeded_text: displayed when player gives NPC a non-desired item,
-        thankyou_text:  text which is displayed when player gives desired_item to NPC,
-        payment_item:   item index of item which is given in return for desired_item,
+        bringmore_text: see above,
+        thankyou_text:  text which is displayed when state is changed to 'SOLVED',
+        payment_item:   item index of item which is given to player when state changes to 'SOLVED',
         solved_text:    text which is displayed on bump when state == 'SOLVED',
         on_solve:       function that is executed after giving payment_item.
     }
-    In all text strings, '%1' is replaced with desired_item name, and '%2' is replaced
-    with payment_item name.
+    In all text strings, '%1' is replaced with list of remaining desired items' names, 
+    and '%2' is replaced with payment_item name. Pay attention:
+    in 'thankyou_text', '%1' will always be an empty string, since no desired items
+    are left.
  */
- var CharacterObject = function (room, char_index, cx, cy, behaviour) {     
+var CharacterObject = function (room, char_index, cx, cy, behaviour) {     
     CharacterObject.superclass.constructor.apply(this, [room, char_index, cx, cy]);
     this.behaviour = behaviour;
+    if ((typeof this.behaviour.desired_items) == "number")
+        this.behaviour.desired_items = [this.behaviour.desired_items];
     this.state = 'UNSOLVED';
- };
+};
  
- CharacterObject.inheritFrom(ActiveObject);
+CharacterObject.inheritFrom(ActiveObject);
  
- CharacterObject.prototype.subst_names = function (str) {
-    return str.replace(/%1/g, MAIN_ITEMS[this.behaviour.desired_item].name).
+CharacterObject.prototype.subst_names = function (str) {
+    var desired_text = "";
+    if (this.behaviour.desired_items.length > 0) {
+        desired_text = MAIN_ITEMS[this.behaviour.desired_items[0]].name;
+        for (var i = 1; i < this.behaviour.desired_items.length; i++) {
+            if (i == this.behaviour.desired_items.length-1)
+                desired_text += " and ";
+            else 
+                desired_text += ", ";
+            desired_text += MAIN_ITEMS[this.behaviour.desired_items[1]].name;
+        }
+    }
+    return str.replace(/%1/g, desired_text).
                replace(/%2/g, (this.behaviour.payment_item ? MAIN_ITEMS[this.behaviour.payment_item].name : ""));
- };
+};
  
- CharacterObject.prototype.on_bump = function () {
+CharacterObject.prototype.on_bump = function () {
     if (this.state == 'UNSOLVED') {
         Game.show_speech(this, this.subst_names(this.behaviour.unsolved_text));
     } else {
         Game.show_speech(this, this.subst_names(this.behaviour.solved_text));
     }
- };
+};
  
- CharacterObject.prototype.on_item = function (item_index) {
-    if (item_index != this.behaviour.desired_item) {
+ /* if item is desired, remove it from desired_items and return true;
+    otherwise return false. */
+CharacterObject.prototype.try_give = function (item_index) {
+    var i = this.behaviour.desired_items.indexOf(item_index);
+    if (i >= 0) {
+        this.behaviour.desired_items.splice(i, 1);
+        return true;
+    }
+    return false;
+};
+ 
+CharacterObject.prototype.on_item = function (item_index) {
+    var desirable = this.try_give(item_index);
+    if (!desirable) {
         if (this.behaviour.notneeded_text)
             Game.show_speech(this, this.behaviour.notneeded_text);
         return false;
-    } else if (this.state == 'UNSOLVED') {
-        this.state = 'SOLVED';
-        Game.show_speech(this, this.subst_names(this.behaviour.thankyou_text), function () {
-            if (this.behaviour.payment_item) {
-                var obj = new PickableObject(this.room, this.behaviour.payment_item, this.cx, this.cy);
-                obj.enterRoom().bringToFront();
-                obj.on_bump();
+    } else {
+        if (this.behaviour.desired_items.length == 0) {
+            /* hero brought everything required */
+            this.state = 'SOLVED';
+            if (this.room.quest) {
+                this.room.quest.solved = true;
             }
-            if (this.behaviour.on_solve) this.on_solve();
-        }.bind(this));
+            Game.show_speech(this, this.subst_names(this.behaviour.thankyou_text), function () {
+                if (this.behaviour.payment_item) {
+                    var obj = new PickableObject(this.room, this.behaviour.payment_item, this.cx, this.cy);
+                    obj.enterRoom().bringToFront();
+                    obj.on_bump();
+                }
+                if (this.behaviour.on_solve) this.behaviour.on_solve(item_index);
+            }.bind(this));
+        } else {
+            /* there are still some items to bring */
+            if (this.behaviour.bringmore_text)
+                Game.show_speech(this, this.subst_names(this.behaviour.bringmore_text), function () {
+                    if (this.behaviour.on_bringmore) 
+                        this.behaviour.on_bringmore(item_index);
+                }.bind(this));
+            else    
+                if (this.behaviour.on_bringmore) 
+                    this.behaviour.on_bringmore(item_index);
+        }
         return true;
     }
- };
+};
  
  
 /* ===================================================================================== */
@@ -299,6 +345,7 @@ var ContainerObject = function (room, container_set, cx, cy, stored_item_index) 
     this.container_set = container_set;
     ContainerObject.superclass.constructor.apply(this, [room, -container_set.closed, cx, cy]);
     this.opened = false;
+    this.on_open = null;
 };
 
 ContainerObject.inheritFrom(ActiveObject);
@@ -312,6 +359,7 @@ ContainerObject.prototype.on_bump = function () {
             obj.enterRoom().bringToFront();
             obj.on_bump();
             this.on_bump = null; /* will now be treated as a static obstacle */
+            if (this.on_open) this.on_open(this);
         }
     }
 };
