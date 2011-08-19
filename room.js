@@ -1,4 +1,4 @@
-var STD_ROOM_SIZE = 13; /* size of exterior rooms (interior may be of any size) */
+var STD_ROOM_SIZE = 18; /* size of exterior rooms (interior may be of any size) */
 
 /* ======================================================================== */
 /* Room containing objects and terrain data.
@@ -71,6 +71,7 @@ Room.prototype.enterFinish = function () {
     this.old_layer0.remove();     
     this.old_layer1.remove();     
     this.old_layer2.remove();     
+    //Game.layer2.remove();
     
     Game.currentroom = this;
     
@@ -116,6 +117,30 @@ Room.prototype.get_obstacles = function (x,y) {
     return null;
 };
 
+/* returns a list of {x, y} points --- empty cells in layer1 in the room */
+Room.prototype.get_empty_cells = function () {
+    var grid = [];
+    for (var i = 0; i < this.width; i++) {
+        var row = [];
+        for (var j = 0; j < this.height; j++)
+            row.push(0); /* 0 means empty */
+        grid.push(row);
+    }
+    
+    for (var i in this.objects) { 
+        if (this.objects[i].obstacle)
+            grid[this.objects[i].cx][this.objects[i].cy] = 1; /* occupied */
+    } 
+    
+    var empty_cells = [];
+    for (var i = 0; i < this.width; i++) {
+        for (var j = 0; j < this.height; j++)
+            if (grid[i][j] == 0)
+                empty_cells.push({x: i, y: j});
+    }
+    return empty_cells;
+};
+
 /* ======================================================================== */
 var SimpleRoom = function (width, height) {
     SimpleRoom.superclass.constructor.apply(this, [width, height]);
@@ -148,6 +173,6 @@ SimpleRoom.prototype.prepareSprites = function () {
 
 SimpleRoom.prototype.leave = function () {
     Game.layer0.removeChild(this.layer0tiles);
-    Game.layer2.removeChildren(this.layer0tiles);
+    Game.layer2.removeChild(this.layer2tiles);
     SimpleRoom.superclass.leave.apply(this);
 };

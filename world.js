@@ -154,6 +154,10 @@ var World = function (seed) {
     }
     
     /* now we need to connect all locations together. */
+    /* we use wilderness rooms to do it.              */
+    
+    shuffle(WILD_ZONES); /* makeWilderness() pops zone indices from this array */
+    
     var unconnected = [];
     for (var j = 0; j < WORLDSIDE; j++)
         for (var i = 0; i < WORLDSIDE; i++) 
@@ -213,7 +217,7 @@ World.prototype.setRoom = function(coords, room) {
 
 /* makes a non-quest cell filled with random monsters */
 World.prototype.makeWilderness = function (x,y) {
-    var room = new SimpleRoom();
+    var room = new WildRoom(WILD_ZONES.pop());
     this.setRoom({x: x, y: y}, room);
     
     this.populateWithMonsters(room);
@@ -223,14 +227,17 @@ World.prototype.makeWilderness = function (x,y) {
    Returns name of the monster set.
 */
 World.prototype.populateWithMonsters = function (room) {
+    /* first, determine empty cells where monsters can be placed */
+    var empty_cells = room.get_empty_cells();
+    shuffle(empty_cells);
+    
     var monster_set = pickRandomKey(MONSTER_SETS);
     var MonsterClass = SHOOTING_MONSTERS[monster_set] ? ShootingMonster : WanderingMonster;
     
-    var count = 8 + Math.round(Math.random() * 8);
-    for (var i = 0; i < count; i++) {
-        var x = Math.floor(Math.random() * room.width);
-        var y = Math.floor(Math.random() * room.height);
-        new MonsterClass(room, MONSTER_SETS[monster_set], x,y, 10, 1, 1, random_loot(0.33));
+    var count = 4 + Math.round(Math.random() * 6);
+    for (var i = 0; i < count && empty_cells.length > 1; i++) {
+        var cell = empty_cells.pop();
+        new MonsterClass(room, MONSTER_SETS[monster_set], cell.x,cell.y, 10, 1, 1, random_loot(0.33));
     }
     
     return monster_set;
@@ -305,10 +312,12 @@ World.prototype.makeLeafQuest = function (heap, id, item, unused_coords) {
             });
             
             /* only one monster will have the desired item */
+            var empty_cells = room.get_empty_cells();
+            shuffle(empty_cells);
+            var cell = empty_cells.pop();
+            
             var MonsterClass = SHOOTING_MONSTERS[monster_set] ? ShootingMonster : WanderingMonster;
-            var x = Math.floor(Math.random() * room.width);
-            var y = Math.floor(Math.random() * room.height);
-            new MonsterClass(room, MONSTER_SETS[monster_set], x,y, 10, 1, 1, item);
+            new MonsterClass(room, MONSTER_SETS[monster_set], cell.x,cell.y, 10, 1, 1, item);
             
             break;
             

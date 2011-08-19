@@ -747,12 +747,23 @@ var SHOOTING_MONSTERS = {
     'IG88': true
 };
 
+/* tiles which are automatically recognized as wandering / shooting monsters */
 var AUTO_MONSTERS = {
     1059: {name: 'Tusken', shooting: false, loot: 0, loot_chance: 0.0},
     784:  {name: 'Jawa', shooting: false, loot: 0, loot_chance: 0.0},
     801:  {name: 'Stormtrooper', shooting: true, loot: THINGS['Blaster'], loot_chance: 0.5},
     1312: {name: 'Stormtrooper', shooting: true, loot: THINGS['Blaster'], loot_chance: 0.5},
     1316: {name: 'Stormtrooper', shooting: true, loot: THINGS['Blaster'], loot_chance: 0.5},
+};
+
+/* tiles which are recognized as movables */
+var AUTO_MOVABLES = {
+    7: "Movable Tatooine rock",
+    85: "Another rock",
+    112: "Rock with sharper edges",
+    186: "Round metallic bin",
+    265: "Box crate",
+    266: "Box crate too",
 };
 
 var PROJECTILES = { 
