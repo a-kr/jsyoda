@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>jsYoda</title>
+
+<script type="text/javascript" src="lib/jquery-1.4.3.min.js"></script>
+<script type="text/javascript" src="lib/jquery-ui.js"></script>
+<script type="text/javascript" src="lib/jstile.js"></script>
+<script type="text/javascript" src="lib/jstile.layer.js"></script>
+<script type="text/javascript" src="lib/jstile.image.js"></script>
+<script type="text/javascript" src="lib/jstile.sprite.js"></script>
+<script type="text/javascript" src="lib/jstile.grid.js"></script>
+<script type="text/javascript" src="lib/jstile.keytracker.js"></script>
+
+<script type="text/javascript" src="tiles.js"></script>
+<script type="text/javascript" src="player.js"></script>
+<script type="text/javascript" src="yozones.js"></script>
+<script type="text/javascript" src="room.js"></script>
+<script type="text/javascript" src="yorooms.js"></script>
+<script type="text/javascript" src="objects.js"></script>
+<script type="text/javascript" src="world.js"></script>
+<script type="text/javascript" src="game.js"></script>
+<script type="text/javascript">
+
+window.onload = function(){
+	init_game();
+};
+</script>
+
+<style>
+#speechbubble {
+    border: solid 1px #333333;
+    background-color: white;
+    border-radius: 8px;
+    font-family: tahoma, sans, sans-serif;
+    font-size: 12px;
+    padding: 6px;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    display: none;
+}
+
+#overlayer {
+    border: solid 1px gray;
+}
+
+#inventory {
+    position: absolute;
+    overflow-y: auto;
+    border: solid 1px gray;
+    width: 206px;
+    height: 228px;
+}
+
+#explanation {
+    height: 20px;
+    font-family: tahoma, sans, sans-serif;
+    font-size: 12px;
+    border: solid 1px gray;
+}
+
+#status {
+    border: solid 1px gray;
+    width: 206px;
+}
+.itemdiv {
+    height: 32px;
+    font-family: tahoma, sans, sans-serif;
+    cursor: pointer;
+}
+.itemdiv:hover {
+    background-color: #FFEA6C;
+}
+.itemicon {
+    
+}
+
+.itemlabel {
+    position: relative;
+    top: -28px;
+    left: 34px;
+    width: 150px;
+    font-size: 14px;
+}
+
+
+</style>
+
+</head>
+<body>
+    <div style="position: absolute;" id="layer0"></div>
+    <div style="position: absolute;" id="layer1"></div>
+    <div style="position: absolute;" id="layer2"></div>
+    <div style="position: absolute;" id="overlayer">
+        <div id='speechbubble'></div>
+    </div>
+    
+    <div id="inventory">
+        
+    </div>
+    <div id="status">
+    </div>
+    <div id="explanation"></div>
+    
+    
+    
+</body>
+</html>
