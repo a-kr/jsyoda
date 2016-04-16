@@ -19,14 +19,14 @@ namespace GenView
 	/// </summary>
 	public partial class IactForm : Form
 	{
-		ZoneData zonedata;
+		Zone zone;
 		IACT iact;
 		
-		public void SetThings(ZoneData zonedata)
+		public void SetThings(Zone zone)
 		{
-			this.zonedata = zonedata;
+			this.zone = zone;
 			lbIactIndex.Items.Clear();
-			lbIactIndex.Items.AddRange(Enumerable.Range(0, zonedata.Iacts.Length).Select(i => i.ToString()).ToArray());
+			lbIactIndex.Items.AddRange(Enumerable.Range(0, zone.Iacts.Length).Select(i => i.ToString()).ToArray());
 		}
 		
 		public IactForm()
@@ -43,10 +43,10 @@ namespace GenView
 		
 		void LbIactIndexSelectedIndexChanged(object sender, EventArgs e)
 		{
-			if (lbIactIndex.SelectedIndex < 0 || lbIactIndex.SelectedIndex >= zonedata.Iacts.Length)
+			if (lbIactIndex.SelectedIndex < 0 || lbIactIndex.SelectedIndex >= zone.Iacts.Length)
 				return;
 			
-			iact = zonedata.Iacts[lbIactIndex.SelectedIndex];
+			iact = zone.Iacts[lbIactIndex.SelectedIndex];
 			int iact4 = iact.Raw[4] + iact.Raw[5] * 0x100;
 			label1.Text = string.Format("real len: {0}, iact[4]: {1}, diff: {2}",
 			                            iact.Raw.Length, iact4, iact.Raw.Length - iact4);

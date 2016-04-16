@@ -71,7 +71,6 @@
     <Compile Include="SpriteMgr.cs" />
     <Compile Include="YodaReader.cs" />
     <Compile Include="Zone.cs" />
-    <Compile Include="ZoneData.cs" />
     <Compile Include="ZoneDrawer.cs" />
     <Compile Include="ZonesForm.cs">
       <SubType>Form</SubType>

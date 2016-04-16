@@ -72,7 +72,7 @@ namespace GenView
                     }
                 }
 
-                if (reached_stop)
+                if (reached_stop || position >= s.Length)
                     break;
 
                 position++;
@@ -83,6 +83,27 @@ namespace GenView
             s.Read(buf, 0, buf.Length);
             result.Bytes = buf;
             return result;
+        }
+
+        public int ReadShort()
+        {
+            byte[] buf = new byte[2];
+            this.S.Read(buf, 0, 2);
+            return (int)(buf[0]) + (int)(buf[1]) * 256;
+        }
+
+        public int ReadByte()
+        {
+            byte[] buf = new byte[1];
+            this.S.Read(buf, 0, 1);
+            return (int)(buf[0]);
+        }
+
+        public int ReadLong()
+        {
+            byte[] buf = new byte[4];
+            this.S.Read(buf, 0, 4);
+            return (int)(buf[0]) + (int)(buf[1]) * 256 + (int)(buf[2]) * 256 * 256 + (int)(buf[3]) * 256 * 256 * 256;
         }
     }
 }

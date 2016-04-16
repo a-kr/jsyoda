@@ -82,7 +82,6 @@ namespace GenView
                 Yodesk.Seek(entry.offset, 0);
                 //Yodesk.Seek(0x022cb64, 0);
                 var zone = new GenView.Zone(Yodesk);
-                var zdata = new GenView.ZoneData(Yodesk);
                 
                 
                 stream.WriteLine("ZONES[{0}] = {{", entry.index);

@@ -77,7 +77,6 @@ namespace GenView
 		}
 		
 		Zone zone;
-		ZoneData zonedata;
 		
 		public ZonesForm()
 		{
@@ -103,18 +102,17 @@ namespace GenView
             this.Text = (lbZoneIndex.SelectedItem as ZoneListEntry).index.ToString();
             
 			zone = new Zone(yodesk);
-			zonedata = new ZoneData(yodesk);
 			
-			btnShowIacts.Text = string.Format("IACTs: {0}", zonedata.Iacts.Length);
+			btnShowIacts.Text = string.Format("IACTs: {0}", zone.Iacts.Length);
 			
 			tbZZ.Text = 
                 string.Format("Planet: {0}\r\nZone: {1}\r\n", zone.Planet, zone.ZoneType)
                 + toHexStr(zone.Header)
                 + "\r\n\r\n" +
-			    "IZAX:\r\n" + toHexStr(zonedata.IZAX) + 
-			        "\r\n\r\nIZX2:\r\n" + toHexStr(zonedata.IZX2) + 
-			        "\r\n\r\nIZX3:\r\n" + toHexStr(zonedata.IZX3) +
-			        "\r\n\r\nIZX4:\r\n" + toHexStr(zonedata.IZX4);
+			    "IZAX:\r\n" + toHexStr(zone.IZAX) + 
+			        "\r\n\r\nIZX2:\r\n" + toHexStr(zone.IZX2) + 
+			        "\r\n\r\nIZX3:\r\n" + toHexStr(zone.IZX3) +
+			        "\r\n\r\nIZX4:\r\n" + toHexStr(zone.IZX4);
 			    
 			
 			RenderZone();
@@ -147,7 +145,7 @@ namespace GenView
 		
 		void BtnShowIactsClick(object sender, EventArgs e)
 		{
-			iactForm.SetThings(zonedata);
+			iactForm.SetThings(zone);
 			iactForm.Show();
 		}
 
