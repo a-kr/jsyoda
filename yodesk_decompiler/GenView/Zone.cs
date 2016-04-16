@@ -125,9 +125,29 @@ namespace GenView
                 obj.Y = s.ReadShort();
                 obj.Unk1 = s.ReadShort();
                 obj.Arg = s.ReadShort();
+                this.ObjectInfos[i] = obj;
             }
         }
-		
+
+        public string DebugDescription()
+        {
+            var d = "";
+
+            d += string.Format("Planet: {0}\r\nZone: {1}\r\n", this.Planet, this.ZoneType);
+            d += Utils.ToHexStr(this.Header);
+            d += "\r\n\r\n";
+            d += string.Format("ObjectInfos: {0}\r\n", this.ObjectInfos.Length);
+            foreach (var o in this.ObjectInfos)
+            {
+                d += string.Format("{0}\r\n", o.String());
+            }
+            d += "\r\n\r\n";
+            d += "IZAX:\r\n" + Utils.ToHexStr(this.IZAX) + "\r\n\r\n";
+            d += "IZX2:\r\n" + Utils.ToHexStr(this.IZX2) + "\r\n\r\n";
+            d += "IZX3:\r\n" + Utils.ToHexStr(this.IZX3) + "\r\n\r\n";
+            d += "IZX4:\r\n" + Utils.ToHexStr(this.IZX4) + "\r\n\r\n";
+            return d;
+        }
 	}
 	
 	public struct Cell 

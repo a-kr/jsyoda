@@ -89,10 +89,7 @@ namespace GenView
 			// TODO: Add constructor code after the InitializeComponent() call.
 			//
 		}
-		
-		string toHexStr(byte[] thing) {
-		    return string.Join(" ", zone.Header.Select(b => b.ToString("X2")).ToArray());
-		}
+	
 		
 		void LbZoneIndexSelectedIndexChanged(object sender, EventArgs e)
 		{
@@ -104,15 +101,8 @@ namespace GenView
 			zone = new Zone(yodesk);
 			
 			btnShowIacts.Text = string.Format("IACTs: {0}", zone.Iacts.Length);
-			
-			tbZZ.Text = 
-                string.Format("Planet: {0}\r\nZone: {1}\r\n", zone.Planet, zone.ZoneType)
-                + toHexStr(zone.Header)
-                + "\r\n\r\n" +
-			    "IZAX:\r\n" + toHexStr(zone.IZAX) + 
-			        "\r\n\r\nIZX2:\r\n" + toHexStr(zone.IZX2) + 
-			        "\r\n\r\nIZX3:\r\n" + toHexStr(zone.IZX3) +
-			        "\r\n\r\nIZX4:\r\n" + toHexStr(zone.IZX4);
+
+            tbZZ.Text = zone.DebugDescription();
 			    
 			
 			RenderZone();
