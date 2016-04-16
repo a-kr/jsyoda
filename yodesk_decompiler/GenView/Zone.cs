@@ -36,7 +36,9 @@ namespace GenView
 
         public Cell[,] Cells;
 
-        public byte[] IZAX;
+        public Izax IZAX;
+
+        public byte[] IZAXTail;
         public byte[] IZX2;
         public byte[] IZX3;
         public byte[] IZX4;
@@ -89,12 +91,22 @@ namespace GenView
 
         private void ReadIzaStuff(YodaReader stream)
         {
-            stream.ReadUntil("IZAX"); // TODO read object info
-            IZAX = stream.ReadUntil("IZX2").Bytes;
+            //stream.ReadUntil("IZAX");
+            stream.ExpectAtCurrentPos("IZAX");
+            this.ReadIzax(stream);
+            stream.ExpectAtCurrentPos("IZX2");
+            //IZAXTail = stream.ReadUntil("IZX2").Bytes;
             IZX2 = stream.ReadUntil("IZX3").Bytes;
             IZX3 = stream.ReadUntil("IZX4").Bytes;
             IZX4 = stream.ReadUntil("IACT", "IZON", "PUZ2").Bytes;
         }
+
+        private void ReadIzax(YodaReader stream)
+        {
+            this.IZAX = new Izax();
+            this.IZAX.Deserialize(stream);
+        }
+
         private void ReadIacts(YodaReader stream)
         {
             List<IACT> iacts = new List<IACT>();
@@ -142,7 +154,24 @@ namespace GenView
                 d += string.Format("{0}\r\n", o.String());
             }
             d += "\r\n\r\n";
-            d += "IZAX:\r\n" + Utils.ToHexStr(this.IZAX) + "\r\n\r\n";
+
+            d += string.Format("IZAX: entry1 count = {0}\r\n", this.IZAX.Entries1.Length);
+            foreach (var o in this.IZAX.Entries1)
+            {
+                d += string.Format("{0}\r\n", o.ToString());
+            }
+            d += string.Format("IZAX: entry2 count = {0}\r\n", this.IZAX.Entries2.Length);
+            foreach (var o in this.IZAX.Entries2)
+            {
+                d += string.Format("{0}\r\n", o.ToString());
+            }
+            d += string.Format("IZAX: entry3 count = {0}\r\n", this.IZAX.Entries3.Length);
+            foreach (var o in this.IZAX.Entries3)
+            {
+                d += string.Format("{0}\r\n", o.ToString());
+            }
+
+            //d += "IZAX tail:\r\n" + Utils.ToHexStr(this.IZAXTail) + "\r\n\r\n";
             d += "IZX2:\r\n" + Utils.ToHexStr(this.IZX2) + "\r\n\r\n";
             d += "IZX3:\r\n" + Utils.ToHexStr(this.IZX3) + "\r\n\r\n";
             d += "IZX4:\r\n" + Utils.ToHexStr(this.IZX4) + "\r\n\r\n";
@@ -182,6 +211,87 @@ namespace GenView
         public string String()
         {
             return string.Format("{0} at {1};{2}", OBJECT_TYPE[Type], X, Y);
+        }
+    }
+
+    public class Izax
+    {
+        public int Magic;
+        public int Size;
+        public int Pad;
+        public IzaxEntry1[] Entries1;
+        public IzaxEntry2[] Entries2;
+        public IzaxEntry3[] Entries3;
+
+        public void Deserialize(YodaReader stream)
+        {
+            this.Magic = stream.ReadLong();
+            this.Size = stream.ReadLong();
+            this.Pad = stream.ReadShort();
+
+            int n;
+            n = stream.ReadShort();
+            this.Entries1 = stream.ReadObjectArray<IzaxEntry1>(n);
+            n = stream.ReadShort();
+            this.Entries2 = stream.ReadObjectArray<IzaxEntry2>(n);
+            n = stream.ReadShort();
+            this.Entries3 = stream.ReadObjectArray<IzaxEntry3>(n);
+        }
+    }
+
+    public class IzaxEntry1: YodaDeserializable
+    {
+    	public int EntityId;
+	    public int X;
+	    public int Y;
+	    public int Item;
+	    public int NumItems;
+	    public int Unk3;
+	    public byte[] UnkTail;
+
+        public void Deserialize(YodaReader stream)
+        {
+            this.EntityId = stream.ReadShort();
+            this.X = stream.ReadShort();
+            this.Y = stream.ReadShort();
+            this.Item = stream.ReadShort();
+            this.NumItems = stream.ReadShort();
+            this.Unk3 = stream.ReadShort();
+            this.UnkTail = stream.ReadN(2 * 0x10);
+        }
+
+        public override string ToString()
+        {
+            return string.Format("Entity {0}: at {1};{2} item {3} num {4} unk {5}",
+                this.EntityId, this.X, this.Y, this.Item, this.NumItems, this.Unk3);
+        }
+    }
+
+    public class IzaxEntry2 : YodaDeserializable
+    {
+        public int Item;
+        public void Deserialize(YodaReader stream)
+        {
+            this.Item = stream.ReadShort();
+        }
+
+        public override string ToString()
+        {
+            return string.Format("IzaxEntry2(item={0})", this.Item);
+        }
+    }
+
+    public class IzaxEntry3 : YodaDeserializable
+    {
+        public int Item;
+        public void Deserialize(YodaReader stream)
+        {
+            this.Item = stream.ReadShort();
+        }
+
+        public override string ToString()
+        {
+            return string.Format("IzaxEntry3(item={0})", this.Item);
         }
     }
 }

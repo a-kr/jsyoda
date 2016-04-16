@@ -105,5 +105,42 @@ namespace GenView
             this.S.Read(buf, 0, 4);
             return (int)(buf[0]) + (int)(buf[1]) * 256 + (int)(buf[2]) * 256 * 256 + (int)(buf[3]) * 256 * 256 * 256;
         }
+
+        public T[] ReadObjectArray<T>(int n) where T: YodaDeserializable, new() {
+            var result = new T[n];
+            for (int i = 0; i < n; i++)
+            {
+                T obj = new T();
+                obj.Deserialize(this);
+                result[i] = obj;
+            }
+            return result;
+        }
+
+        internal byte[] ReadN(int n)
+        {
+            byte[] buf = new byte[n];
+            this.S.Read(buf, 0, n);
+            return buf;
+        }
+
+        public void ExpectAtCurrentPos(string s)
+        {
+            var s_bytes = Encoding.ASCII.GetBytes(s);
+            byte[] actual_bytes = new byte[s_bytes.Length];
+            this.S.Read(actual_bytes, 0, actual_bytes.Length);
+            this.S.Seek(-actual_bytes.Length, SeekOrigin.Current);
+
+            var actual_s = Encoding.ASCII.GetString(actual_bytes);
+            if (actual_s != s)
+            {
+                throw new Exception(string.Format("Expected {0}, got {1}", s, actual_s));
+            }
+        }
+    }
+
+    public interface YodaDeserializable
+    {
+        void Deserialize(YodaReader stream);
     }
 }
