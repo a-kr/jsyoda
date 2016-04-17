@@ -67,6 +67,8 @@
     <Compile Include="ItemCollection.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Puzzle.cs" />
+    <Compile Include="Script.cs" />
     <Compile Include="SpriteExtractor.cs" />
     <Compile Include="SpriteMgr.cs" />
     <Compile Include="Utils.cs" />

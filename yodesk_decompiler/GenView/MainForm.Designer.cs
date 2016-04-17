@@ -36,55 +36,69 @@ namespace GenView
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.btnShowItemsForm = new System.Windows.Forms.Button();
-			this.btnShowZonesForm = new System.Windows.Forms.Button();
-			this.btnDumpZones = new System.Windows.Forms.Button();
-			this.SuspendLayout();
-			// 
-			// btnShowItemsForm
-			// 
-			this.btnShowItemsForm.Location = new System.Drawing.Point(12, 12);
-			this.btnShowItemsForm.Name = "btnShowItemsForm";
-			this.btnShowItemsForm.Size = new System.Drawing.Size(136, 23);
-			this.btnShowItemsForm.TabIndex = 0;
-			this.btnShowItemsForm.Text = "Items form";
-			this.btnShowItemsForm.UseVisualStyleBackColor = true;
-			this.btnShowItemsForm.Click += new System.EventHandler(this.BtnShowItemsFormClick);
-			// 
-			// btnShowZonesForm
-			// 
-			this.btnShowZonesForm.Location = new System.Drawing.Point(154, 12);
-			this.btnShowZonesForm.Name = "btnShowZonesForm";
-			this.btnShowZonesForm.Size = new System.Drawing.Size(172, 23);
-			this.btnShowZonesForm.TabIndex = 1;
-			this.btnShowZonesForm.Text = "Zones form";
-			this.btnShowZonesForm.UseVisualStyleBackColor = true;
-			this.btnShowZonesForm.Click += new System.EventHandler(this.BtnShowZonesFormClick);
+            this.btnShowItemsForm = new System.Windows.Forms.Button();
+            this.btnShowZonesForm = new System.Windows.Forms.Button();
+            this.btnDumpZones = new System.Windows.Forms.Button();
+            this.btnDumpPuzzles = new System.Windows.Forms.Button();
+            this.SuspendLayout();
             // 
-			// btnDumpZones
-			// 
-			this.btnDumpZones.Location = new System.Drawing.Point(354, 12);
-			this.btnDumpZones.Name = "btnDumpZones";
-			this.btnDumpZones.Size = new System.Drawing.Size(172, 23);
-			this.btnDumpZones.TabIndex = 1;
-			this.btnDumpZones.Text = "DumpZones";
-			this.btnDumpZones.UseVisualStyleBackColor = true;
-			this.btnDumpZones.Click += new System.EventHandler(this.BtnDumpZonesClick);
-			// 
-			// MainForm
-			// 
-			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(603, 319);
-			this.Controls.Add(this.btnShowZonesForm);
-			this.Controls.Add(this.btnShowItemsForm);
-			this.Controls.Add(this.btnDumpZones);
-			this.Name = "MainForm";
-			this.Text = "GenView";
-			this.ResumeLayout(false);
+            // btnShowItemsForm
+            // 
+            this.btnShowItemsForm.Location = new System.Drawing.Point(12, 12);
+            this.btnShowItemsForm.Name = "btnShowItemsForm";
+            this.btnShowItemsForm.Size = new System.Drawing.Size(136, 23);
+            this.btnShowItemsForm.TabIndex = 0;
+            this.btnShowItemsForm.Text = "Items form";
+            this.btnShowItemsForm.UseVisualStyleBackColor = true;
+            this.btnShowItemsForm.Click += new System.EventHandler(this.BtnShowItemsFormClick);
+            // 
+            // btnShowZonesForm
+            // 
+            this.btnShowZonesForm.Location = new System.Drawing.Point(154, 12);
+            this.btnShowZonesForm.Name = "btnShowZonesForm";
+            this.btnShowZonesForm.Size = new System.Drawing.Size(172, 23);
+            this.btnShowZonesForm.TabIndex = 1;
+            this.btnShowZonesForm.Text = "Zones form";
+            this.btnShowZonesForm.UseVisualStyleBackColor = true;
+            this.btnShowZonesForm.Click += new System.EventHandler(this.BtnShowZonesFormClick);
+            // 
+            // btnDumpZones
+            // 
+            this.btnDumpZones.Location = new System.Drawing.Point(354, 12);
+            this.btnDumpZones.Name = "btnDumpZones";
+            this.btnDumpZones.Size = new System.Drawing.Size(172, 23);
+            this.btnDumpZones.TabIndex = 1;
+            this.btnDumpZones.Text = "DumpZones";
+            this.btnDumpZones.UseVisualStyleBackColor = true;
+            this.btnDumpZones.Click += new System.EventHandler(this.BtnDumpZonesClick);
+            // 
+            // btnDumpPuzzles
+            // 
+            this.btnDumpPuzzles.Location = new System.Drawing.Point(354, 68);
+            this.btnDumpPuzzles.Name = "btnDumpPuzzles";
+            this.btnDumpPuzzles.Size = new System.Drawing.Size(172, 23);
+            this.btnDumpPuzzles.TabIndex = 2;
+            this.btnDumpPuzzles.Text = "Dump puzzles";
+            this.btnDumpPuzzles.UseVisualStyleBackColor = true;
+            this.btnDumpPuzzles.Click += new System.EventHandler(this.btnDumpPuzzles_Click);
+            // 
+            // MainForm
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(603, 319);
+            this.Controls.Add(this.btnDumpPuzzles);
+            this.Controls.Add(this.btnShowZonesForm);
+            this.Controls.Add(this.btnShowItemsForm);
+            this.Controls.Add(this.btnDumpZones);
+            this.Name = "MainForm";
+            this.Text = "GenView";
+            this.ResumeLayout(false);
+
 		}
 		private System.Windows.Forms.Button btnShowZonesForm;
 		private System.Windows.Forms.Button btnShowItemsForm;
 		private System.Windows.Forms.Button btnDumpZones;
+        private System.Windows.Forms.Button btnDumpPuzzles;
 	}
 }

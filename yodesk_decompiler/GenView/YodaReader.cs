@@ -106,6 +106,13 @@ namespace GenView
             return (int)(buf[0]) + (int)(buf[1]) * 256 + (int)(buf[2]) * 256 * 256 + (int)(buf[3]) * 256 * 256 * 256;
         }
 
+        public uint ReadUnsignedLong()
+        {
+            byte[] buf = new byte[4];
+            this.S.Read(buf, 0, 4);
+            return (uint)(buf[0]) + (uint)(buf[1]) * 256 + (uint)(buf[2]) * 256 * 256 + (uint)(buf[3]) * 256 * 256 * 256;
+        }
+
         public T[] ReadObjectArray<T>(int n) where T: YodaDeserializable, new() {
             var result = new T[n];
             for (int i = 0; i < n; i++)
@@ -124,19 +131,42 @@ namespace GenView
             return buf;
         }
 
-        public void ExpectAtCurrentPos(string s)
+        public string ReadLengthPrefixedString()
+        {
+            int n = this.ReadShort();
+            if (n > 0)
+            {
+                byte[] n_bytes = this.ReadN(n);
+                return Encoding.ASCII.GetString(n_bytes);
+            }
+            return "";
+        }
+
+        public bool CurrentPosContainsAtOffset(string s, int offset)
         {
             var s_bytes = Encoding.ASCII.GetBytes(s);
             byte[] actual_bytes = new byte[s_bytes.Length];
+            this.S.Seek(offset, SeekOrigin.Current);
             this.S.Read(actual_bytes, 0, actual_bytes.Length);
-            this.S.Seek(-actual_bytes.Length, SeekOrigin.Current);
+            this.S.Seek(-actual_bytes.Length - offset, SeekOrigin.Current);
 
             var actual_s = Encoding.ASCII.GetString(actual_bytes);
-            if (actual_s != s)
+            return actual_s == s;
+        }
+
+        public bool CurrentPosContains(string s)
+        {
+            return this.CurrentPosContainsAtOffset(s, 0);
+        }
+
+        public void ExpectAtCurrentPos(string s)
+        {
+            if (!this.CurrentPosContains(s))
             {
-                throw new Exception(string.Format("Expected {0}, got {1}", s, actual_s));
+                throw new Exception(string.Format("Expected {0}, got something else", s));
             }
         }
+
     }
 
     public interface YodaDeserializable

@@ -74,6 +74,7 @@ namespace GenView
 			
 			lbZoneIndex.Items.Clear();
 			lbZoneIndex.Items.AddRange(zone_list.ToArray());
+
 		}
 		
 		Zone zone;
@@ -89,7 +90,7 @@ namespace GenView
 			// TODO: Add constructor code after the InitializeComponent() call.
 			//
 		}
-	
+
 		
 		void LbZoneIndexSelectedIndexChanged(object sender, EventArgs e)
 		{

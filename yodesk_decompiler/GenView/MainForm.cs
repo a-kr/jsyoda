@@ -23,8 +23,7 @@ namespace GenView
 		const string DtaFname = @"Yodesk.dta";
 		const string ZoneOffsetsFname = @"offsets.txt";
 		const string PaletteFname = @"yopal.1";
-		
-		public YodaReader Yodesk;
+
 		public ItemsForm itemsForm;
 		public ZonesForm zonesForm;
 		
@@ -42,17 +41,21 @@ namespace GenView
 			//
 			SpriteExtractor.LoadPalette(PaletteFname);
 
-            Yodesk = new YodaReader(File.OpenRead(DtaFname));
-			SpriteExtractor.Yodesk = new YodaReader(File.OpenRead(DtaFname)); // must be separate stream			
-			itemCollection = new ItemCollection(Yodesk);
+            SpriteExtractor.Yodesk = this.GetReader();			
+			itemCollection = new ItemCollection(this.GetReader());
 			
 			itemsForm = new ItemsForm();
 			itemsForm.SetCollection(itemCollection);
 			
 			int[] zoneOffsets = File.ReadAllLines(ZoneOffsetsFname).Select(s => int.Parse(s)).ToArray();
 			zonesForm = new ZonesForm();
-			zonesForm.SetThings(Yodesk, zoneOffsets);
+			zonesForm.SetThings(this.GetReader(), zoneOffsets);
 		}
+
+        public YodaReader GetReader()
+        {
+            return new YodaReader(File.OpenRead(DtaFname));
+        }
 		
 		void BtnShowItemsFormClick(object sender, EventArgs e)
 		{
@@ -69,6 +72,7 @@ namespace GenView
 		{
             var filestream = System.IO.File.OpenWrite(@"yozones.js");
             var stream = new System.IO.StreamWriter(filestream);
+            var yodesk = this.GetReader();
             stream.WriteLine("ZONES = {};\n\n");
             
 			IEnumerable<ZonesForm.ZoneListEntry> to_dump;
@@ -79,9 +83,9 @@ namespace GenView
             };
             
             foreach (ZonesForm.ZoneListEntry entry in to_dump) {
-                Yodesk.Seek(entry.offset, 0);
+                yodesk.Seek(entry.offset, 0);
                 //Yodesk.Seek(0x022cb64, 0);
-                var zone = new GenView.Zone(Yodesk);
+                var zone = new GenView.Zone(yodesk);
                 
                 
                 stream.WriteLine("ZONES[{0}] = {{", entry.index);
@@ -113,5 +117,15 @@ namespace GenView
             
             MessageBox.Show("Done.");
 		}
+
+        private void btnDumpPuzzles_Click(object sender, EventArgs e)
+        {
+            var puzzleCollection = new PuzzleCollection();
+            puzzleCollection.Deserialize(this.GetReader());
+
+            puzzleCollection.ExportToCsv("puzzles.csv");
+
+            MessageBox.Show("Done.");
+        }
 	}
 }

@@ -55,15 +55,18 @@ namespace GenView
 			if (e.Index < 0 || e.Index >= Collection.Items.Length)
 				return;
 			
-			string numbers = string.Format("{0:000} 0x{1}",
+			string numbers = string.Format("{0:000} 0x{1} sprite {2:00000} 0x{3}",
 			                               Collection.Items[e.Index].Index,
-			                               Collection.Items[e.Index].Index.ToString("X2"));
+			                               Collection.Items[e.Index].Index.ToString("X2"),
+                                           Collection.Items[e.Index].Sprite,
+                                           Collection.Items[e.Index].Sprite.ToString("X4")
+                                           );
 			Brush brush = new SolidBrush(e.ForeColor);
 			e.Graphics.DrawString(numbers, e.Font, brush, 2, e.Bounds.Top + 13);
 			Bitmap b = SpriteMgr.GetSprite(Collection.Items[e.Index].Sprite);
 			e.Graphics.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceOver;
-			e.Graphics.DrawImage(b, 60, e.Bounds.Top + 1, 32, 32);
-			e.Graphics.DrawString(Collection.Items[e.Index].Name, e.Font, brush, 96,  e.Bounds.Top + 13);			
+			e.Graphics.DrawImage(b, 160, e.Bounds.Top + 1, 32, 32);
+			e.Graphics.DrawString(Collection.Items[e.Index].Name, e.Font, brush, 196,  e.Bounds.Top + 13);			
 		}
 		
 		void TbFinderTextChanged(object sender, EventArgs e)
@@ -79,6 +82,21 @@ namespace GenView
 					break;
 				}
 			}
+
+            if (found == -1)
+            {
+                int spriteNo;
+                if (Int32.TryParse(lowertext, out spriteNo)) {
+                    for (int i = 0; i < Collection.Items.Length; i++)
+                    {
+                        if (Collection.Items[i].Sprite == spriteNo)
+                        {
+                            found = i;
+                            break;
+                        }
+                    }
+                }
+            }
 			
 			if (found == -1)
 			{
@@ -90,5 +108,10 @@ namespace GenView
 				lbItems.SelectedIndex = found;
 			}
 		}
+
+        private void lbItems_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
 	}
 }

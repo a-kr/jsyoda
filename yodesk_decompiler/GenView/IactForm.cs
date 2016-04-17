@@ -20,13 +20,17 @@ namespace GenView
 	public partial class IactForm : Form
 	{
 		Zone zone;
-		IACT iact;
+		Iact iact;
 		
 		public void SetThings(Zone zone)
 		{
 			this.zone = zone;
 			lbIactIndex.Items.Clear();
 			lbIactIndex.Items.AddRange(Enumerable.Range(0, zone.Iacts.Length).Select(i => i.ToString()).ToArray());
+            if (lbIactIndex.Items.Count > 0)
+            {
+                lbIactIndex.SelectedIndex = 0;
+            }
 		}
 		
 		public IactForm()
@@ -47,11 +51,14 @@ namespace GenView
 				return;
 			
 			iact = zone.Iacts[lbIactIndex.SelectedIndex];
+            /*
 			int iact4 = iact.Raw[4] + iact.Raw[5] * 0x100;
 			label1.Text = string.Format("real len: {0}, iact[4]: {1}, diff: {2}",
 			                            iact.Raw.Length, iact4, iact.Raw.Length - iact4);
 			tbHex.Text = ToHex(iact.Raw);
 			tbAnsi.Text = ToAnsi(iact.Raw);
+             */
+            tbHex.Text = iact.ToString();
 		}
 		
 		string ToHex(byte[] bytes)
@@ -95,5 +102,10 @@ namespace GenView
 				this.Hide();
 			}
 		}
+
+        private void IactForm_Load(object sender, EventArgs e)
+        {
+
+        }
 	}
 }

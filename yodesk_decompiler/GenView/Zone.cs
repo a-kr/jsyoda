@@ -31,6 +31,7 @@ namespace GenView
             "FIND_SOMETHING_USEFUL_DROP", "FIND_SOMETHING_USEFUL_BUILDING", "FIND_THE_FORCE"
         };
 
+
         public string Planet;
         public string ZoneType;
 
@@ -43,7 +44,7 @@ namespace GenView
         public byte[] IZX3;
         public byte[] IZX4;
 
-        public IACT[] Iacts;
+        public Iact[] Iacts;
 
         public ZoneObjectInfo[] ObjectInfos;
 
@@ -109,14 +110,12 @@ namespace GenView
 
         private void ReadIacts(YodaReader stream)
         {
-            List<IACT> iacts = new List<IACT>();
+            List<Iact> iacts = new List<Iact>();
 
-            while (stream.Next == "IACT")
-            {
-                var raw = stream.ReadUntil("IACT", "IZON", "PUZ2").Bytes;
-                IACT act = new IACT();
-                act.Raw = raw;
-                iacts.Add(act);
+            while (stream.CurrentPosContains("IACT")) {
+                var iact = new Iact();
+                iact.Deserialize(stream);
+                iacts.Add(iact);
             }
 
             this.Iacts = iacts.ToArray();
@@ -188,11 +187,6 @@ namespace GenView
 		public int SpriteThree { get { return Bytes[4] + Bytes[5] * 0x100; }}
 		
 	}
-
-    public class IACT
-    {
-        public byte[] Raw;
-    }
 
     public class ZoneObjectInfo
     {

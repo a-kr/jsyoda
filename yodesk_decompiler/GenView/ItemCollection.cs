@@ -17,7 +17,7 @@ namespace GenView
 	/// </summary>
 	public class ItemCollection
 	{
-		const int ITEM_COUNT = 246;
+		const int ITEM_COUNT = 247;
 		const int TNAM_OFFSET = 0x00462466;
 			
 		public ItemCollection(YodaReader stream)
