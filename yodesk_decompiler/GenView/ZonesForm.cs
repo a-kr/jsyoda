@@ -38,7 +38,7 @@ namespace GenView
             }
         }
         
-        public static IEnumerable<ZoneListEntry> entries;
+        public static ZoneListEntry[] entries;
 		
 		public void SetThings(YodaReader yodesk_reader, int[] zoneOffsets)
 		{
@@ -70,10 +70,13 @@ namespace GenView
                 })
                 ;//.OrderBy(o => o.type).OrderBy(o => o.planet);
 
-            ZonesForm.entries = zone_list;
+            ZonesForm.entries = zone_list.ToArray();
+
+            cbZoneTypeFilter.Items.Clear();
+            cbZoneTypeFilter.Items.AddRange(Zone.ZONE_TYPE);
 			
 			lbZoneIndex.Items.Clear();
-			lbZoneIndex.Items.AddRange(zone_list.ToArray());
+            lbZoneIndex.Items.AddRange(ZonesForm.entries);
 
 		}
 		
@@ -143,6 +146,19 @@ namespace GenView
         private void ZonesForm_Load(object sender, EventArgs e)
         {
 
+        }
+
+        private void cpZoneTypeFilter_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+            var items = ZonesForm.entries.Where(entry => entry.type == cbZoneTypeFilter.SelectedIndex).ToArray();
+            if (cbZoneTypeFilter.SelectedIndex == 0)
+            {
+                items = ZonesForm.entries;
+            }
+
+            lbZoneIndex.Items.Clear();
+            lbZoneIndex.Items.AddRange(items);
         }
 	}
 }

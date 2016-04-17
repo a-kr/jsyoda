@@ -45,6 +45,7 @@ namespace GenView
             this.cbLayer1 = new System.Windows.Forms.CheckBox();
             this.btnShowIacts = new System.Windows.Forms.Button();
             this.tbZZ = new System.Windows.Forms.TextBox();
+            this.cbZoneTypeFilter = new System.Windows.Forms.ComboBox();
             this.panelForImage.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pbImage)).BeginInit();
             this.groupBox1.SuspendLayout();
@@ -55,9 +56,9 @@ namespace GenView
             this.lbZoneIndex.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)));
             this.lbZoneIndex.FormattingEnabled = true;
-            this.lbZoneIndex.Location = new System.Drawing.Point(12, 12);
+            this.lbZoneIndex.Location = new System.Drawing.Point(12, 38);
             this.lbZoneIndex.Name = "lbZoneIndex";
-            this.lbZoneIndex.Size = new System.Drawing.Size(149, 459);
+            this.lbZoneIndex.Size = new System.Drawing.Size(205, 433);
             this.lbZoneIndex.TabIndex = 0;
             this.lbZoneIndex.SelectedIndexChanged += new System.EventHandler(this.LbZoneIndexSelectedIndexChanged);
             // 
@@ -68,9 +69,9 @@ namespace GenView
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.panelForImage.AutoScroll = true;
             this.panelForImage.Controls.Add(this.pbImage);
-            this.panelForImage.Location = new System.Drawing.Point(167, 12);
+            this.panelForImage.Location = new System.Drawing.Point(223, 12);
             this.panelForImage.Name = "panelForImage";
-            this.panelForImage.Size = new System.Drawing.Size(386, 465);
+            this.panelForImage.Size = new System.Drawing.Size(330, 465);
             this.panelForImage.TabIndex = 1;
             // 
             // pbImage
@@ -154,11 +155,22 @@ namespace GenView
             this.tbZZ.Size = new System.Drawing.Size(239, 367);
             this.tbZZ.TabIndex = 5;
             // 
+            // cbZoneTypeFilter
+            // 
+            this.cbZoneTypeFilter.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbZoneTypeFilter.FormattingEnabled = true;
+            this.cbZoneTypeFilter.Location = new System.Drawing.Point(13, 12);
+            this.cbZoneTypeFilter.Name = "cbZoneTypeFilter";
+            this.cbZoneTypeFilter.Size = new System.Drawing.Size(204, 21);
+            this.cbZoneTypeFilter.TabIndex = 6;
+            this.cbZoneTypeFilter.SelectedIndexChanged += new System.EventHandler(this.cpZoneTypeFilter_SelectedIndexChanged);
+            // 
             // ZonesForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(810, 496);
+            this.Controls.Add(this.cbZoneTypeFilter);
             this.Controls.Add(this.tbZZ);
             this.Controls.Add(this.btnShowIacts);
             this.Controls.Add(this.groupBox1);
@@ -185,5 +197,6 @@ namespace GenView
 		private System.Windows.Forms.PictureBox pbImage;
 		private System.Windows.Forms.Panel panelForImage;
 		private System.Windows.Forms.ListBox lbZoneIndex;
+        private System.Windows.Forms.ComboBox cbZoneTypeFilter;
 	}
 }

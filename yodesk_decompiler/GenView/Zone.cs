@@ -24,7 +24,7 @@ namespace GenView
 		public byte[] Header;
 
         public readonly string[] PLANET = { "UNUSED", "DESERT", "SNOW", "FOREST", "UNUSED", "SWAMP" };
-        public readonly string[] ZONE_TYPE = {
+        public static readonly string[] ZONE_TYPE = {
             "NOP", "ENEMY_TERRITORY", "FINAL_DESTINATION", "ITEM_FOR_ITEM", "FIND_SOMETHING_USEFUL_NPC",
             "ITEM_TO_PASS", "FROM_ANOTHER_MAP", "TO_ANOTHER_MAP", "INDOORS", "INTRO_SCREEN", "FINAL_ITEM",
             "MAP_START_AREA", "UNUSED_C", "VICTORY_SCREEN", "LOSS_SCREEN", "MAP_TO_ITEM_FOR_LOCK",
